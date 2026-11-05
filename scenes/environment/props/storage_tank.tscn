@@ -1,0 +1,77 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/concrete.tres" id="1_concrete"]
+[ext_resource type="Material" path="res://materials/tank_paint.tres" id="2_tank_paint"]
+[ext_resource type="Material" path="res://materials/rust.tres" id="3_rust"]
+[ext_resource type="Material" path="res://materials/steel_worn.tres" id="4_steel_worn"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 3.4
+bottom_radius = 3.4
+height = 0.6
+radial_segments = 24
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
+top_radius = 3.0
+bottom_radius = 3.0
+height = 7.0
+radial_segments = 24
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 3.03
+bottom_radius = 3.03
+height = 0.7
+radial_segments = 24
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.6
+bottom_radius = 3.05
+height = 1.0
+radial_segments = 24
+rings = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.5, 7.6, 0.1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_6"]
+top_radius = 0.25
+bottom_radius = 0.25
+height = 4.0
+radial_segments = 10
+rings = 1
+
+[node name="StorageTank" type="Node3D"]
+
+[node name="Plinth" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 0.3, 0.0)
+mesh = SubResource("CylinderMesh_1")
+material_override = ExtResource("1_concrete")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 4.1, 0.0)
+mesh = SubResource("CylinderMesh_2")
+material_override = ExtResource("2_tank_paint")
+
+[node name="RustBand" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 1.2, 0.0)
+mesh = SubResource("CylinderMesh_3")
+material_override = ExtResource("3_rust")
+
+[node name="Roof" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 8.1, 0.0)
+mesh = SubResource("CylinderMesh_4")
+material_override = ExtResource("2_tank_paint")
+
+[node name="Ladder" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 4.2, 3.05)
+mesh = SubResource("BoxMesh_5")
+material_override = ExtResource("4_steel_worn")
+
+[node name="Outlet" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 1.2, 4.8)
+rotation_degrees = Vector3(90.0, 0.0, 0.0)
+mesh = SubResource("CylinderMesh_6")
+material_override = ExtResource("3_rust")

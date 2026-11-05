@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/train/train_controller.gd" id="1_train_contro"]
+[ext_resource type="PackedScene" path="res://scenes/train/locomotive.tscn" id="2_locomotive"]
+[ext_resource type="PackedScene" path="res://scenes/train/armored_railcar.tscn" id="3_armored_rail"]
+
+[node name="Train" type="Node3D"]
+script = ExtResource("1_train_contro")
+
+[node name="Locomotive" parent="." instance=ExtResource("2_locomotive")]
+
+[node name="ArmoredRailcar" parent="." instance=ExtResource("3_armored_rail")]

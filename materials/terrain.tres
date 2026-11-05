@@ -1,0 +1,22 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_t"]
+frequency = 0.02
+fractal_octaves = 5
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_t"]
+width = 512
+height = 512
+seamless = true
+noise = SubResource("FastNoiseLite_t")
+
+[resource]
+resource_name = "terrain"
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+albedo_color = Color(1.5, 1.5, 1.5, 1)
+albedo_texture = SubResource("NoiseTexture2D_t")
+roughness = 0.96
+uv1_scale = Vector3(0.08, 0.08, 0.08)
+uv1_triplanar = true
+uv1_world_triplanar = true

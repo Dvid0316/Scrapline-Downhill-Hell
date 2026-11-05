@@ -1,0 +1,6 @@
+# Normalize line endings for text resources
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ogg binary
+*.wav binary

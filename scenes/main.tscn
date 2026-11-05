@@ -1,0 +1,177 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/core/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/track/track.tscn" id="2_track"]
+[ext_resource type="Script" path="res://scripts/environment/terrain_builder.gd" id="3_terrain_buil"]
+[ext_resource type="Material" path="res://materials/terrain.tres" id="4_terrain"]
+[ext_resource type="Script" path="res://scripts/environment/prop_scatter.gd" id="5_prop_scatter"]
+[ext_resource type="PackedScene" path="res://scenes/environment/props/rock.tscn" id="6_rock"]
+[ext_resource type="PackedScene" path="res://scenes/environment/props/cliff_spires.tscn" id="7_cliff_spires"]
+[ext_resource type="PackedScene" path="res://scenes/environment/props/container_blue.tscn" id="8_container_bl"]
+[ext_resource type="PackedScene" path="res://scenes/environment/props/container_rust.tscn" id="9_container_ru"]
+[ext_resource type="PackedScene" path="res://scenes/environment/props/storage_tank.tscn" id="10_storage_tank"]
+[ext_resource type="PackedScene" path="res://scenes/environment/props/signal_post.tscn" id="11_signal_post"]
+[ext_resource type="PackedScene" path="res://scenes/environment/props/ore_gantry.tscn" id="12_ore_gantry"]
+[ext_resource type="PackedScene" path="res://scenes/train/train.tscn" id="13_train"]
+[ext_resource type="PackedScene" path="res://scenes/camera/follow_camera.tscn" id="14_follow_camer"]
+[ext_resource type="PackedScene" path="res://scenes/ui/debug_hud.tscn" id="15_debug_hud"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
+sky_top_color = Color(0.3, 0.38, 0.48, 1.0)
+sky_horizon_color = Color(0.7, 0.66, 0.6, 1.0)
+ground_bottom_color = Color(0.18, 0.16, 0.14, 1.0)
+ground_horizon_color = Color(0.62, 0.58, 0.52, 1.0)
+sun_angle_max = 20.0
+
+[sub_resource type="Sky" id="Sky_2"]
+sky_material = SubResource("ProceduralSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_3"]
+background_mode = 2
+sky = SubResource("Sky_2")
+ambient_light_source = 3
+ambient_light_energy = 0.7
+tonemap_mode = 3
+tonemap_exposure = 1.05
+ssao_enabled = true
+ssao_radius = 2.0
+glow_enabled = true
+glow_intensity = 0.35
+glow_bloom = 0.05
+fog_enabled = true
+fog_light_color = Color(0.66, 0.63, 0.58, 1.0)
+fog_density = 0.0022
+fog_sky_affect = 0.35
+adjustment_enabled = true
+adjustment_contrast = 1.08
+adjustment_saturation = 0.88
+
+[node name="Main" type="Node3D" node_paths=PackedStringArray("train", "camera", "hud")]
+script = ExtResource("1_main")
+train = NodePath("Train")
+camera = NodePath("FollowCamera")
+hud = NodePath("DebugHud")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_3")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-38.0, 35.0, 0.0)
+light_color = Color(1.0, 0.93, 0.82, 1.0)
+light_energy = 1.3
+shadow_enabled = true
+directional_shadow_max_distance = 220.0
+
+[node name="Track" parent="." instance=ExtResource("2_track")]
+
+[node name="Terrain" type="Node3D" parent="." node_paths=PackedStringArray("route")]
+script = ExtResource("3_terrain_buil")
+route = NodePath("../Track")
+material = ExtResource("4_terrain")
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Rocks" type="Node3D" parent="Props" node_paths=PackedStringArray("route", "terrain")]
+script = ExtResource("5_prop_scatter")
+route = NodePath("../../Track")
+terrain = NodePath("../../Terrain")
+props = Array[PackedScene]([ExtResource("6_rock")])
+count = 180
+min_lateral = 8.0
+max_lateral = 110.0
+min_track_clearance = 7.0
+random_yaw_degrees = 180.0
+scale_range = Vector2(0.6, 2.4)
+non_uniform_scale = 0.35
+sink = 0.4
+random_seed = 11
+
+[node name="Boulders" type="Node3D" parent="Props" node_paths=PackedStringArray("route", "terrain")]
+script = ExtResource("5_prop_scatter")
+route = NodePath("../../Track")
+terrain = NodePath("../../Terrain")
+props = Array[PackedScene]([ExtResource("6_rock")])
+count = 45
+min_lateral = 30.0
+max_lateral = 130.0
+min_track_clearance = 22.0
+random_yaw_degrees = 180.0
+scale_range = Vector2(3.0, 6.5)
+non_uniform_scale = 0.3
+sink = 1.6
+random_seed = 23
+
+[node name="CliffSpires" type="Node3D" parent="Props" node_paths=PackedStringArray("route", "terrain")]
+script = ExtResource("5_prop_scatter")
+route = NodePath("../../Track")
+terrain = NodePath("../../Terrain")
+props = Array[PackedScene]([ExtResource("7_cliff_spires")])
+count = 40
+side = -1
+min_lateral = 24.0
+max_lateral = 80.0
+min_track_clearance = 18.0
+random_yaw_degrees = 180.0
+scale_range = Vector2(0.8, 1.9)
+non_uniform_scale = 0.2
+sink = 1.0
+random_seed = 31
+
+[node name="Containers" type="Node3D" parent="Props" node_paths=PackedStringArray("route", "terrain")]
+script = ExtResource("5_prop_scatter")
+route = NodePath("../../Track")
+terrain = NodePath("../../Terrain")
+props = Array[PackedScene]([ExtResource("8_container_bl"), ExtResource("9_container_ru")])
+count = 26
+min_lateral = 6.5
+max_lateral = 11.0
+min_track_clearance = 5.5
+random_yaw_degrees = 10.0
+start_margin = 30.0
+random_seed = 41
+
+[node name="Tanks" type="Node3D" parent="Props" node_paths=PackedStringArray("route", "terrain")]
+script = ExtResource("5_prop_scatter")
+route = NodePath("../../Track")
+terrain = NodePath("../../Terrain")
+props = Array[PackedScene]([ExtResource("10_storage_tank")])
+count = 6
+min_lateral = 10.5
+max_lateral = 13.0
+min_track_clearance = 9.0
+random_yaw_degrees = 180.0
+start_margin = 60.0
+random_seed = 53
+
+[node name="Signals" type="Node3D" parent="Props" node_paths=PackedStringArray("route", "terrain")]
+script = ExtResource("5_prop_scatter")
+route = NodePath("../../Track")
+terrain = NodePath("../../Terrain")
+props = Array[PackedScene]([ExtResource("11_signal_post")])
+interval = 70.0
+side = 1
+min_lateral = 3.4
+max_lateral = 3.4
+start_margin = 40.0
+random_seed = 61
+
+[node name="Gantries" type="Node3D" parent="Props" node_paths=PackedStringArray("route", "terrain")]
+script = ExtResource("5_prop_scatter")
+route = NodePath("../../Track")
+terrain = NodePath("../../Terrain")
+props = Array[PackedScene]([ExtResource("12_ore_gantry")])
+interval = 260.0
+min_lateral = 0.0
+max_lateral = 0.0
+start_margin = 180.0
+random_seed = 71
+
+[node name="Train" parent="." node_paths=PackedStringArray("route") instance=ExtResource("13_train")]
+route = NodePath("../Track")
+
+[node name="FollowCamera" parent="." node_paths=PackedStringArray("train") instance=ExtResource("14_follow_camer")]
+train = NodePath("../Train")
+
+[node name="DebugHud" parent="." node_paths=PackedStringArray("train", "camera") instance=ExtResource("15_debug_hud")]
+train = NodePath("../Train")
+camera = NodePath("../FollowCamera")

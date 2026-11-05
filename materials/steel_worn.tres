@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "steel_worn"
+albedo_color = Color(0.52, 0.53, 0.54, 1)
+metallic = 0.85
+roughness = 0.42
+

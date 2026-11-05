@@ -1,0 +1,18 @@
+# Godot 4 generated cache / imported assets
+.godot/
+.import/
+
+# Export output
+/build/
+/export/
+export_credentials.cfg
+
+# Dev captures (screenshots from --capture)
+/captures/
+
+# Editor / OS noise
+*.tmp
+*~
+.DS_Store
+.vscode/
+.idea/

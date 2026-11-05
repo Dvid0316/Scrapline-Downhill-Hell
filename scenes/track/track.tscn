@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/track/rail_route.gd" id="1_rail_route"]
+[ext_resource type="Script" path="res://scripts/track/track_builder.gd" id="2_track_builde"]
+[ext_resource type="Material" path="res://materials/rail_steel.tres" id="3_rail_steel"]
+[ext_resource type="Material" path="res://materials/sleeper_wood.tres" id="4_sleeper_wood"]
+[ext_resource type="Material" path="res://materials/ballast.tres" id="5_ballast"]
+
+[node name="Track" type="Path3D"]
+script = ExtResource("1_rail_route")
+
+[node name="Rails" type="Node3D" parent="." node_paths=PackedStringArray("route")]
+script = ExtResource("2_track_builde")
+route = NodePath("..")
+rail_material = ExtResource("3_rail_steel")
+sleeper_material = ExtResource("4_sleeper_wood")
+ballast_material = ExtResource("5_ballast")

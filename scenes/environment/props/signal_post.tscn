@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/concrete.tres" id="1_concrete"]
+[ext_resource type="Material" path="res://materials/steel_worn.tres" id="2_steel_worn"]
+[ext_resource type="Material" path="res://materials/armor_dark.tres" id="3_armor_dark"]
+[ext_resource type="Material" path="res://materials/lamp_red.tres" id="4_lamp_red"]
+[ext_resource type="Material" path="res://materials/lamp_green.tres" id="5_lamp_green"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(0.6, 0.4, 0.6)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
+top_radius = 0.09
+bottom_radius = 0.09
+height = 4.4
+radial_segments = 8
+rings = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.45, 1.0, 0.3)
+
+[sub_resource type="SphereMesh" id="SphereMesh_4"]
+radius = 0.12
+height = 0.24
+radial_segments = 8
+rings = 4
+
+[sub_resource type="SphereMesh" id="SphereMesh_5"]
+radius = 0.12
+height = 0.24
+radial_segments = 8
+rings = 4
+
+[node name="SignalPost" type="Node3D"]
+
+[node name="Base" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 0.2, 0.0)
+mesh = SubResource("BoxMesh_1")
+material_override = ExtResource("1_concrete")
+
+[node name="Pole" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 2.4, 0.0)
+mesh = SubResource("CylinderMesh_2")
+material_override = ExtResource("2_steel_worn")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 4.9, 0.0)
+mesh = SubResource("BoxMesh_3")
+material_override = ExtResource("3_armor_dark")
+
+[node name="LampRed" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 5.15, 0.16)
+mesh = SubResource("SphereMesh_4")
+material_override = ExtResource("4_lamp_red")
+
+[node name="LampGreen" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 4.75, 0.16)
+mesh = SubResource("SphereMesh_5")
+material_override = ExtResource("5_lamp_green")

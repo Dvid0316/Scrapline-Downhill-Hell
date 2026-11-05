@@ -1,0 +1,17 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_b"]
+frequency = 0.35
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_b"]
+width = 256
+height = 256
+seamless = true
+noise = SubResource("FastNoiseLite_b")
+
+[resource]
+resource_name = "ballast"
+albedo_color = Color(0.55, 0.52, 0.48, 1)
+albedo_texture = SubResource("NoiseTexture2D_b")
+roughness = 0.97
+uv1_scale = Vector3(3, 3, 1)

@@ -32,6 +32,14 @@ extends Camera3D
 @export_range(0.0, 20.0) var position_smoothing: float = 5.0
 @export_range(0.0, 20.0) var yaw_smoothing: float = 2.0
 
+@export_group("Shake")
+## Master switch / strength for impact shake (explosions only; never from firing).
+@export var shake_enabled: bool = true
+## Maximum lens offset in metres at full trauma. Keep small.
+@export_range(0.0, 3.0) var max_shake_offset: float = 0.45
+## Trauma lost per second.
+@export_range(0.1, 10.0) var shake_decay: float = 2.2
+
 @export_group("Limits")
 @export var min_pitch: float = 45.0
 @export var max_pitch: float = 60.0
@@ -42,10 +50,13 @@ var _focus: Vector3
 var _yaw: float = 0.0
 var _initialised := false
 var _defaults := {}
+var _trauma: float = 0.0
+var _shake_time: float = 0.0
 
 
 func _ready() -> void:
 	process_priority = 10
+	add_to_group(&"camera_shake")
 	_defaults = {
 		"pitch_degrees": pitch_degrees, "distance": distance,
 		"look_ahead": look_ahead, "yaw_offset_degrees": yaw_offset_degrees,
@@ -76,6 +87,26 @@ func _process(delta: float) -> void:
 	_focus = _focus.lerp(_target_focus(), pk)
 	_yaw = lerp_angle(_yaw, _target_yaw(), yk)
 	_apply()
+	_update_shake(delta)
+
+
+## Add screen shake (0..1). Shake moves the lens sideways via h/v_offset, so
+## framing, follow target and aim maths are unaffected.
+func add_trauma(amount: float) -> void:
+	if shake_enabled:
+		_trauma = clampf(_trauma + amount, 0.0, 1.0)
+
+
+func _update_shake(delta: float) -> void:
+	if _trauma <= 0.0:
+		h_offset = 0.0
+		v_offset = 0.0
+		return
+	_trauma = maxf(_trauma - shake_decay * delta, 0.0)
+	_shake_time += delta * 30.0
+	var k := _trauma * _trauma * max_shake_offset
+	h_offset = sin(_shake_time * 1.7) * cos(_shake_time * 0.9) * k
+	v_offset = sin(_shake_time * 2.3 + 1.3) * k
 
 
 func _smooth_factor(rate: float, delta: float) -> float:

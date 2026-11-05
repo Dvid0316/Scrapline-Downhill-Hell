@@ -1,0 +1,118 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/explosive_barrel.gd" id="1_explosive_ba"]
+[ext_resource type="Material" path="res://materials/barrel_red.tres" id="2_barrel_red"]
+[ext_resource type="Material" path="res://materials/hazard_yellow.tres" id="3_hazard_yello"]
+[ext_resource type="Material" path="res://materials/armor_dark.tres" id="4_armor_dark"]
+[ext_resource type="Material" path="res://materials/rock_dark.tres" id="5_rock_dark"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.5
+bottom_radius = 0.5
+height = 1.4
+radial_segments = 16
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
+top_radius = 0.51
+bottom_radius = 0.51
+height = 0.3
+radial_segments = 16
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.515
+bottom_radius = 0.515
+height = 0.08
+radial_segments = 16
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.515
+bottom_radius = 0.515
+height = 0.08
+radial_segments = 16
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_5"]
+top_radius = 0.47
+bottom_radius = 0.47
+height = 0.03
+radial_segments = 16
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_6"]
+top_radius = 1.1
+bottom_radius = 1.2
+height = 0.04
+radial_segments = 12
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_7"]
+top_radius = 0.48
+bottom_radius = 0.52
+height = 0.35
+radial_segments = 10
+rings = 1
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_8"]
+radius = 0.6
+height = 1.5
+
+[node name="ExplosiveBarrel" type="Node3D"]
+script = ExtResource("1_explosive_ba")
+max_health = 20.0
+points = 50
+display_name = "BARREL"
+surface = "metal"
+explosion_scale = 1.4
+blast_radius = 8.0
+blast_damage = 150.0
+
+[node name="Intact" type="Node3D" parent="."]
+
+[node name="Drum" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 0.7, 0.0)
+mesh = SubResource("CylinderMesh_1")
+material_override = ExtResource("2_barrel_red")
+
+[node name="HazardBand" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 0.85, 0.0)
+mesh = SubResource("CylinderMesh_2")
+material_override = ExtResource("3_hazard_yello")
+
+[node name="Band0" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 0.3, 0.0)
+mesh = SubResource("CylinderMesh_3")
+material_override = ExtResource("4_armor_dark")
+
+[node name="Band1" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 1.25, 0.0)
+mesh = SubResource("CylinderMesh_4")
+material_override = ExtResource("4_armor_dark")
+
+[node name="Lid" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 1.415, 0.0)
+mesh = SubResource("CylinderMesh_5")
+material_override = ExtResource("3_hazard_yello")
+
+[node name="Wreck" type="Node3D" parent="."]
+visible = false
+
+[node name="Scorch" type="MeshInstance3D" parent="Wreck"]
+position = Vector3(0.0, 0.03, 0.0)
+mesh = SubResource("CylinderMesh_6")
+material_override = ExtResource("5_rock_dark")
+
+[node name="Stub" type="MeshInstance3D" parent="Wreck"]
+position = Vector3(0.0, 0.17, 0.0)
+mesh = SubResource("CylinderMesh_7")
+material_override = ExtResource("4_armor_dark")
+
+[node name="Body" type="StaticBody3D" parent="."]
+collision_layer = 4
+collision_mask = 0
+
+[node name="Shape0" type="CollisionShape3D" parent="Body"]
+position = Vector3(0.0, 0.75, 0.0)
+shape = SubResource("CylinderShape3D_8")

@@ -7,7 +7,8 @@ extends CanvasLayer
 @onready var _stats: Label = %Stats
 @onready var _help: Label = %Help
 
-const HELP := """W/S or Up/Down  speed ±
+const HELP := """Mouse  aim    Hold LMB  fire
+W/S or Up/Down  speed ±
 Space  pause    R  restart run
 [ ]  camera pitch    , .  or wheel  distance
 ; '  look-ahead    Home  reset camera

@@ -1,0 +1,117 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/destructible_target.gd" id="1_destructible"]
+[ext_resource type="Material" path="res://materials/armor_dark.tres" id="2_armor_dark"]
+[ext_resource type="Material" path="res://materials/container_blue.tres" id="3_container_bl"]
+[ext_resource type="Material" path="res://materials/hazard_yellow.tres" id="4_hazard_yello"]
+[ext_resource type="Material" path="res://materials/rust.tres" id="5_rust"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(3.2, 0.25, 2.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(2.9, 1.9, 1.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(2.92, 0.08, 1.82)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.1, 1.4, 1.84)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.1, 1.4, 1.84)
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.1, 1.4, 1.84)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_7"]
+top_radius = 0.15
+bottom_radius = 0.15
+height = 1.0
+radial_segments = 8
+rings = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.8, 0.6, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(2.9, 0.9, 1.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(1.8, 0.1, 1.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
+size = Vector3(3.2, 2.4, 2.0)
+
+[node name="PowerGenerator" type="Node3D"]
+script = ExtResource("1_destructible")
+max_health = 90.0
+points = 120
+display_name = "GENERATOR"
+surface = "metal"
+explosion_scale = 1.3
+
+[node name="Intact" type="Node3D" parent="."]
+
+[node name="Skid" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 0.12, 0.0)
+mesh = SubResource("BoxMesh_1")
+material_override = ExtResource("2_armor_dark")
+
+[node name="Housing" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 1.2, 0.0)
+mesh = SubResource("BoxMesh_2")
+material_override = ExtResource("3_container_bl")
+
+[node name="RoofHazard" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 2.18, 0.0)
+mesh = SubResource("BoxMesh_3")
+material_override = ExtResource("4_hazard_yello")
+
+[node name="Fin0" type="MeshInstance3D" parent="Intact"]
+position = Vector3(-0.9, 1.2, 0.0)
+mesh = SubResource("BoxMesh_4")
+material_override = ExtResource("2_armor_dark")
+
+[node name="Fin1" type="MeshInstance3D" parent="Intact"]
+position = Vector3(-0.6, 1.2, 0.0)
+mesh = SubResource("BoxMesh_5")
+material_override = ExtResource("2_armor_dark")
+
+[node name="Fin2" type="MeshInstance3D" parent="Intact"]
+position = Vector3(-0.3, 1.2, 0.0)
+mesh = SubResource("BoxMesh_6")
+material_override = ExtResource("2_armor_dark")
+
+[node name="Exhaust" type="MeshInstance3D" parent="Intact"]
+position = Vector3(1.0, 2.6, 0.4)
+mesh = SubResource("CylinderMesh_7")
+material_override = ExtResource("5_rust")
+
+[node name="Panel" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.6, 1.3, -0.92)
+mesh = SubResource("BoxMesh_8")
+material_override = ExtResource("4_hazard_yello")
+
+[node name="Wreck" type="Node3D" parent="."]
+visible = false
+
+[node name="Shell" type="MeshInstance3D" parent="Wreck"]
+position = Vector3(0.0, 0.55, 0.0)
+rotation_degrees = Vector3(0.0, 0.0, 6.0)
+mesh = SubResource("BoxMesh_9")
+material_override = ExtResource("2_armor_dark")
+
+[node name="Lid" type="MeshInstance3D" parent="Wreck"]
+position = Vector3(1.8, 0.06, 0.5)
+rotation_degrees = Vector3(0.0, 30.0, 0.0)
+mesh = SubResource("BoxMesh_10")
+material_override = ExtResource("3_container_bl")
+
+[node name="Body" type="StaticBody3D" parent="."]
+collision_layer = 4
+collision_mask = 0
+
+[node name="Shape0" type="CollisionShape3D" parent="Body"]
+position = Vector3(0.0, 1.2, 0.0)
+shape = SubResource("BoxShape3D_11")

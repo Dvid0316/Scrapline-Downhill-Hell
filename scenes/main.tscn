@@ -15,6 +15,19 @@
 [ext_resource type="PackedScene" path="res://scenes/train/train.tscn" id="13_train"]
 [ext_resource type="PackedScene" path="res://scenes/camera/follow_camera.tscn" id="14_follow_camer"]
 [ext_resource type="PackedScene" path="res://scenes/ui/debug_hud.tscn" id="15_debug_hud"]
+[ext_resource type="Script" path="res://scripts/combat/target_course.gd" id="16_target_cours"]
+[ext_resource type="PackedScene" path="res://scenes/targets/armored_plate.tscn" id="17_armored_plat"]
+[ext_resource type="PackedScene" path="res://scenes/targets/armored_bunker.tscn" id="18_armored_bunk"]
+[ext_resource type="PackedScene" path="res://scenes/targets/explosive_barrel.tscn" id="19_explosive_ba"]
+[ext_resource type="PackedScene" path="res://scenes/targets/wooden_crate.tscn" id="20_wooden_crate"]
+[ext_resource type="PackedScene" path="res://scenes/targets/power_generator.tscn" id="21_power_genera"]
+[ext_resource type="Script" path="res://scripts/weapons/hitscan_weapon.gd" id="22_hitscan_weap"]
+[ext_resource type="Script" path="res://scripts/weapons/turret_input.gd" id="23_turret_input"]
+[ext_resource type="Script" path="res://scripts/effects/effects_manager.gd" id="24_effects_mana"]
+[ext_resource type="Script" path="res://scripts/audio/combat_audio.gd" id="25_combat_audio"]
+[ext_resource type="Script" path="res://scripts/combat/score_tracker.gd" id="26_score_tracke"]
+[ext_resource type="Script" path="res://scripts/combat/combat_feedback.gd" id="27_combat_feedb"]
+[ext_resource type="PackedScene" path="res://scenes/ui/combat_hud.tscn" id="28_combat_hud"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.3, 0.38, 0.48, 1.0)
@@ -46,11 +59,16 @@ adjustment_enabled = true
 adjustment_contrast = 1.08
 adjustment_saturation = 0.88
 
-[node name="Main" type="Node3D" node_paths=PackedStringArray("train", "camera", "hud")]
+[node name="Main" type="Node3D" node_paths=PackedStringArray("train", "camera", "hud", "target_course", "score", "weapon", "turret_input", "combat_hud")]
 script = ExtResource("1_main")
 train = NodePath("Train")
 camera = NodePath("FollowCamera")
 hud = NodePath("DebugHud")
+target_course = NodePath("TargetCourse")
+score = NodePath("Combat/ScoreTracker")
+weapon = NodePath("Combat/Weapon")
+turret_input = NodePath("Combat/TurretInput")
+combat_hud = NodePath("CombatHud")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_3")
@@ -175,3 +193,49 @@ train = NodePath("../Train")
 [node name="DebugHud" parent="." node_paths=PackedStringArray("train", "camera") instance=ExtResource("15_debug_hud")]
 train = NodePath("../Train")
 camera = NodePath("../FollowCamera")
+
+[node name="TargetCourse" type="Node3D" parent="." node_paths=PackedStringArray("route", "terrain")]
+script = ExtResource("16_target_cours")
+route = NodePath("../Track")
+terrain = NodePath("../Terrain")
+plate_scene = ExtResource("17_armored_plat")
+bunker_scene = ExtResource("18_armored_bunk")
+barrel_scene = ExtResource("19_explosive_ba")
+crate_scene = ExtResource("20_wooden_crate")
+generator_scene = ExtResource("21_power_genera")
+
+[node name="Combat" type="Node3D" parent="."]
+
+[node name="Weapon" type="Node" parent="Combat" node_paths=PackedStringArray("turret")]
+script = ExtResource("22_hitscan_weap")
+turret = NodePath("../../Train/ArmoredRailcar/TurretMount/HeavyMGTurret")
+
+[node name="TurretInput" type="Node" parent="Combat" node_paths=PackedStringArray("camera", "turret", "weapon")]
+script = ExtResource("23_turret_input")
+camera = NodePath("../../FollowCamera")
+turret = NodePath("../../Train/ArmoredRailcar/TurretMount/HeavyMGTurret")
+weapon = NodePath("../Weapon")
+
+[node name="Effects" type="Node3D" parent="Combat"]
+script = ExtResource("24_effects_mana")
+
+[node name="Audio" type="Node3D" parent="Combat"]
+script = ExtResource("25_combat_audio")
+
+[node name="ScoreTracker" type="Node" parent="Combat"]
+script = ExtResource("26_score_tracke")
+
+[node name="Feedback" type="Node" parent="Combat" node_paths=PackedStringArray("weapon", "turret", "effects", "audio", "hud", "camera")]
+script = ExtResource("27_combat_feedb")
+weapon = NodePath("../Weapon")
+turret = NodePath("../../Train/ArmoredRailcar/TurretMount/HeavyMGTurret")
+effects = NodePath("../Effects")
+audio = NodePath("../Audio")
+hud = NodePath("../../CombatHud")
+camera = NodePath("../../FollowCamera")
+
+[node name="CombatHud" parent="." node_paths=PackedStringArray("camera", "score", "weapon", "turret_input") instance=ExtResource("28_combat_hud")]
+camera = NodePath("../FollowCamera")
+score = NodePath("../Combat/ScoreTracker")
+weapon = NodePath("../Combat/Weapon")
+turret_input = NodePath("../Combat/TurretInput")

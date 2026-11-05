@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[resource]
+resource_name = "barrel_red"
+albedo_color = Color(0.72, 0.1, 0.05, 1)
+metallic = 0.4
+roughness = 0.6

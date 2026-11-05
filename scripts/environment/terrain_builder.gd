@@ -30,6 +30,9 @@ extends Node3D
 @export var noise_amplitude: float = 9.0
 @export var noise_seed: int = 7
 
+## Build a static collider (WORLD layer) so shots and the aim ray hit the ground.
+@export var generate_collision: bool = true
+
 @export_group("Colours")
 @export var gravel_color: Color = Color(0.2, 0.19, 0.18)
 @export var dirt_color: Color = Color(0.36, 0.31, 0.24)
@@ -39,6 +42,11 @@ extends Node3D
 var _noise: FastNoiseLite
 var _detail: FastNoiseLite
 var _mean_y: float = 0.0
+# Built height grid (world space), so sample_height() matches the mesh exactly.
+var _grid: PackedFloat32Array
+var _grid_nx: int = 0
+var _grid_nz: int = 0
+var _grid_min: Vector2
 
 
 func _ready() -> void:
@@ -84,7 +92,30 @@ func track_relation(x: float, z: float) -> Vector3:
 	return Vector3(delta.length() * side, c.y, off)
 
 
+## Ground height at world XZ. After build() this reads the generated grid
+## with the same triangle split as the mesh, so props sit exactly on the
+## visible surface. Before build (or outside the grid) it uses the analytic shape.
 func sample_height(x: float, z: float) -> float:
+	if _grid_nx > 1:
+		var gx := (x - _grid_min.x) / cell_size
+		var gz := (z - _grid_min.y) / cell_size
+		var i := int(floor(gx))
+		var j := int(floor(gz))
+		if i >= 0 and j >= 0 and i < _grid_nx - 1 and j < _grid_nz - 1:
+			var u := gx - i
+			var v := gz - j
+			var a := _grid[j * _grid_nx + i]
+			var b := _grid[j * _grid_nx + i + 1]
+			var c := _grid[(j + 1) * _grid_nx + i]
+			var d := _grid[(j + 1) * _grid_nx + i + 1]
+			# Mesh triangles are (a, b, d) and (a, d, c).
+			if u >= v:
+				return a + (b - a) * u + (d - b) * v
+			return a + (c - a) * v + (d - c) * u
+	return analytic_height(x, z)
+
+
+func analytic_height(x: float, z: float) -> float:
 	var rel := track_relation(x, z)
 	return _height_from_relation(x, z, rel)
 
@@ -139,6 +170,11 @@ func build() -> void:
 			heights[j * nx + i] = _height_from_relation(x, z, rel)
 			dists[j * nx + i] = absf(rel.x)
 
+	_grid = heights
+	_grid_nx = nx
+	_grid_nz = nz
+	_grid_min = min_v
+
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for j in nz:
@@ -174,6 +210,15 @@ func build() -> void:
 	mi.mesh = st.commit()
 	mi.material_override = material
 	add_child(mi)
+	if generate_collision:
+		var body := StaticBody3D.new()
+		body.name = "TerrainBody"
+		body.collision_layer = PhysicsLayers.WORLD
+		body.collision_mask = 0
+		var shape := CollisionShape3D.new()
+		shape.shape = mi.mesh.create_trimesh_shape()
+		body.add_child(shape)
+		mi.add_child(body)
 
 
 func _color_for(normal: Vector3, dist: float, x: float, z: float) -> Color:

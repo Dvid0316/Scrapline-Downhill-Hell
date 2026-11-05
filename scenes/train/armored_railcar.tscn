@@ -98,6 +98,9 @@ height = 0.2
 radial_segments = 8
 rings = 4
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_26"]
+size = Vector3(3.0, 3.0, 14.0)
+
 [node name="ArmoredRailcar" type="Node3D"]
 script = ExtResource("2_train_car")
 car_length = 14.0
@@ -236,3 +239,11 @@ material_override = ExtResource("8_lamp_red")
 position = Vector3(1.2, 2.0, 6.42)
 mesh = SubResource("SphereMesh_25")
 material_override = ExtResource("8_lamp_red")
+
+[node name="HullCollision" type="StaticBody3D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="Shape0" type="CollisionShape3D" parent="HullCollision"]
+position = Vector3(0.0, 2.2, 0.0)
+shape = SubResource("BoxShape3D_26")

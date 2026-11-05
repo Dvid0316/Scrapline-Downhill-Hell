@@ -1,0 +1,202 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/mounted_turret.gd" id="1_mounted_turr"]
+[ext_resource type="Material" path="res://materials/armor_dark.tres" id="2_armor_dark"]
+[ext_resource type="Material" path="res://materials/armor_plate.tres" id="3_armor_plate"]
+[ext_resource type="Material" path="res://materials/hazard_yellow.tres" id="4_hazard_yello"]
+[ext_resource type="Material" path="res://materials/rust.tres" id="5_rust"]
+[ext_resource type="Material" path="res://materials/steel_worn.tres" id="6_steel_worn"]
+[ext_resource type="Material" path="res://materials/muzzle_flash.tres" id="7_muzzle_flash"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.9
+bottom_radius = 0.95
+height = 0.3
+radial_segments = 20
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
+top_radius = 0.85
+bottom_radius = 0.85
+height = 0.15
+radial_segments = 20
+rings = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.5, 0.75, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(1.7, 1.05, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(1.72, 0.12, 0.13)
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.1, 0.85, 0.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(0.1, 0.85, 0.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.36, 0.36, 0.55)
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(0.32, 0.3, 0.95)
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(0.26, 0.08, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(0.4, 0.22, 0.12)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_12"]
+top_radius = 0.095
+bottom_radius = 0.095
+height = 0.75
+radial_segments = 10
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_13"]
+top_radius = 0.055
+bottom_radius = 0.055
+height = 1.7
+radial_segments = 10
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_14"]
+top_radius = 0.085
+bottom_radius = 0.085
+height = 0.2
+radial_segments = 10
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_15"]
+top_radius = 0.0
+bottom_radius = 0.24
+height = 0.9
+radial_segments = 8
+rings = 1
+
+[sub_resource type="SphereMesh" id="SphereMesh_16"]
+radius = 0.2
+height = 0.4
+radial_segments = 8
+rings = 4
+
+[sub_resource type="BoxMesh" id="BoxMesh_17"]
+size = Vector3(0.75, 0.75, 0.02)
+
+[node name="HeavyMGTurret" type="Node3D"]
+script = ExtResource("1_mounted_turr")
+
+[node name="Base" type="MeshInstance3D" parent="."]
+position = Vector3(0.0, 0.15, 0.0)
+mesh = SubResource("CylinderMesh_1")
+material_override = ExtResource("2_armor_dark")
+
+[node name="Yaw" type="Node3D" parent="."]
+
+[node name="Platform" type="MeshInstance3D" parent="Yaw"]
+position = Vector3(0.0, 0.37, 0.0)
+mesh = SubResource("CylinderMesh_2")
+material_override = ExtResource("3_armor_plate")
+
+[node name="Pedestal" type="MeshInstance3D" parent="Yaw"]
+position = Vector3(0.0, 0.8, 0.05)
+mesh = SubResource("BoxMesh_3")
+material_override = ExtResource("2_armor_dark")
+
+[node name="Shield" type="MeshInstance3D" parent="Yaw"]
+position = Vector3(0.0, 1.2, -0.6)
+rotation_degrees = Vector3(-10.0, 0.0, 0.0)
+mesh = SubResource("BoxMesh_4")
+material_override = ExtResource("3_armor_plate")
+
+[node name="ShieldStripe" type="MeshInstance3D" parent="Yaw"]
+position = Vector3(0.0, 1.62, -0.67)
+rotation_degrees = Vector3(-10.0, 0.0, 0.0)
+mesh = SubResource("BoxMesh_5")
+material_override = ExtResource("4_hazard_yello")
+
+[node name="WingL" type="MeshInstance3D" parent="Yaw"]
+position = Vector3(-0.85, 1.1, -0.35)
+rotation_degrees = Vector3(0.0, 22.0, 0.0)
+mesh = SubResource("BoxMesh_6")
+material_override = ExtResource("3_armor_plate")
+
+[node name="WingR" type="MeshInstance3D" parent="Yaw"]
+position = Vector3(0.85, 1.1, -0.35)
+rotation_degrees = Vector3(0.0, -22.0, 0.0)
+mesh = SubResource("BoxMesh_7")
+material_override = ExtResource("3_armor_plate")
+
+[node name="AmmoCan" type="MeshInstance3D" parent="Yaw"]
+position = Vector3(0.48, 0.95, 0.25)
+mesh = SubResource("BoxMesh_8")
+material_override = ExtResource("5_rust")
+
+[node name="Pitch" type="Node3D" parent="Yaw"]
+position = Vector3(0.0, 1.2, -0.1)
+
+[node name="Recoil" type="Node3D" parent="Yaw/Pitch"]
+
+[node name="Receiver" type="MeshInstance3D" parent="Yaw/Pitch/Recoil"]
+position = Vector3(0.0, 0.0, 0.15)
+mesh = SubResource("BoxMesh_9")
+material_override = ExtResource("2_armor_dark")
+
+[node name="FeedCover" type="MeshInstance3D" parent="Yaw/Pitch/Recoil"]
+position = Vector3(0.0, 0.18, 0.05)
+mesh = SubResource("BoxMesh_10")
+material_override = ExtResource("6_steel_worn")
+
+[node name="Grips" type="MeshInstance3D" parent="Yaw/Pitch/Recoil"]
+position = Vector3(0.0, -0.05, 0.68)
+mesh = SubResource("BoxMesh_11")
+material_override = ExtResource("2_armor_dark")
+
+[node name="Jacket" type="MeshInstance3D" parent="Yaw/Pitch/Recoil"]
+position = Vector3(0.0, 0.0, -0.62)
+rotation_degrees = Vector3(90.0, 0.0, 0.0)
+mesh = SubResource("CylinderMesh_12")
+material_override = ExtResource("2_armor_dark")
+
+[node name="Barrel" type="MeshInstance3D" parent="Yaw/Pitch/Recoil"]
+position = Vector3(0.0, 0.0, -1.05)
+rotation_degrees = Vector3(90.0, 0.0, 0.0)
+mesh = SubResource("CylinderMesh_13")
+material_override = ExtResource("6_steel_worn")
+
+[node name="MuzzleBrake" type="MeshInstance3D" parent="Yaw/Pitch/Recoil"]
+position = Vector3(0.0, 0.0, -1.9)
+rotation_degrees = Vector3(90.0, 0.0, 0.0)
+mesh = SubResource("CylinderMesh_14")
+material_override = ExtResource("2_armor_dark")
+
+[node name="Muzzle" type="Marker3D" parent="Yaw/Pitch/Recoil"]
+position = Vector3(0.0, 0.0, -2.0)
+
+[node name="MuzzleFlash" type="Node3D" parent="Yaw/Pitch/Recoil"]
+position = Vector3(0.0, 0.0, -2.05)
+
+[node name="Cone" type="MeshInstance3D" parent="Yaw/Pitch/Recoil/MuzzleFlash"]
+position = Vector3(0.0, 0.0, -0.42)
+rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+mesh = SubResource("CylinderMesh_15")
+material_override = ExtResource("7_muzzle_flash")
+
+[node name="Core" type="MeshInstance3D" parent="Yaw/Pitch/Recoil/MuzzleFlash"]
+mesh = SubResource("SphereMesh_16")
+material_override = ExtResource("7_muzzle_flash")
+
+[node name="Petals" type="MeshInstance3D" parent="Yaw/Pitch/Recoil/MuzzleFlash"]
+position = Vector3(0.0, 0.0, 0.0)
+rotation_degrees = Vector3(0.0, 0.0, 45.0)
+mesh = SubResource("BoxMesh_17")
+material_override = ExtResource("7_muzzle_flash")
+
+[node name="FlashLight" type="OmniLight3D" parent="Yaw/Pitch/Recoil/MuzzleFlash"]
+light_color = Color(1.0, 0.7, 0.35, 1.0)
+light_energy = 0.0
+omni_range = 8.0
+shadow_enabled = false

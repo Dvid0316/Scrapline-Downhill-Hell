@@ -97,6 +97,12 @@ rings = 1
 [sub_resource type="BoxMesh" id="BoxMesh_25"]
 size = Vector3(0.4, 0.3, 0.6)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_26"]
+size = Vector3(3.0, 2.6, 17.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_27"]
+size = Vector3(3.2, 0.9, 4.4)
+
 [node name="Locomotive" type="Node3D"]
 script = ExtResource("2_train_car")
 car_length = 17.0
@@ -242,3 +248,15 @@ light_energy = 3.0
 spot_range = 45.0
 spot_angle = 28.0
 shadow_enabled = false
+
+[node name="HullCollision" type="StaticBody3D" parent="."]
+collision_layer = 2
+collision_mask = 0
+
+[node name="Shape0" type="CollisionShape3D" parent="HullCollision"]
+position = Vector3(0.0, 2.2, 0.0)
+shape = SubResource("BoxShape3D_26")
+
+[node name="Shape1" type="CollisionShape3D" parent="HullCollision"]
+position = Vector3(0.0, 3.9, -4.2)
+shape = SubResource("BoxShape3D_27")

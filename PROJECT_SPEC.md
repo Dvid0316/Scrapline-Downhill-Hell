@@ -50,11 +50,53 @@ visuals, and replayability.
   It uses frame-rate-independent exponential smoothing and no shake.
   Camera height = distance × sin(pitch).
 - **Model convention:** front faces −Z, origin at rail-top height, metres.
-- A `TurretMount` marker sits on the railcar's turret ring, ready for M2.
+- A `TurretMount` marker sits on the railcar's turret ring, and the M2 turret is instanced on it.
+
+## Combat architecture (as of Milestone 2)
+
+The systems are separated so each one can change without touching the others:
+
+| Concern | Node / script | Knows about |
+|---|---|---|
+| Train movement | `TrainController` | the route only |
+| Turret aim and visuals | `MountedTurret` | its own child nodes |
+| Fire logic and damage | `HitscanWeapon` | the turret (muzzle and barrel direction) and physics |
+| Player control | `TurretInput` | camera, turret, weapon |
+| Damage receivers | `Damageable` (+ subclasses) | nothing; broadcasts deaths to the `combat_listeners` group |
+| Scoring | `ScoreTracker` | `combat_listeners` events |
+| Presentation glue | `CombatFeedback` | weapon signals + `combat_listeners` → effects, audio, HUD, camera shake |
+| Effects / audio / HUD | `EffectsManager`, `CombatAudio`, `CombatHud` | nothing gameplay-related |
+
+Decisions:
+- **Hitscan** for damage (instant raycast), with **visual-only tracers**
+  that travel at about 520 m/s. That keeps it responsive and deterministic
+  for tests.
+- **Shots go where the barrel points.** The turret slews quickly
+  (300°/s yaw), and the barrel aims at the exact 3D point under the
+  crosshair, so shots land under the crosshair once the turret has caught up.
+- **No self-hits:** player shots and the aim ray use the mask
+  `WORLD | TARGETS`. The train sits on its own `TRAIN` layer, which enemy
+  weapons can target later.
+- **Damage interface is duck-typed:** a weapon walks up from the collider to
+  the first node with `apply_damage(amount, point, normal, source)`. Enemy
+  vehicles can extend `Damageable` and get scoring and effects for free.
+- **Object reuse:** tracers, impacts, explosions, audio voices, and HUD
+  popups are pooled. Destroyed targets are hidden and reset, never freed or
+  respawned.
+- **Camera independence:** the weapon never references the camera. Shake
+  is triggered only by destructions (via `CombatFeedback`) and uses lens
+  offset (`h_offset`/`v_offset`), so the framing and aim maths don't change.
+- **Readability over strict realism for targets:** targets are slightly
+  oversized and use hazard yellow and red so they read from the 50 m camera.
+  Plates lean back 30° to face the camera.
+- **Audio** is synthesized placeholder audio from `tools/gen_sfx.py`. It's
+  original, so there are no licensing concerns. Replace the files and keep the names.
+
+Physics layers: 1 `world` (terrain), 2 `train`, 3 `targets`.
 
 ## Milestones
 
-### Milestone 1: Moving Train Prototype ✅ (this build)
+### Milestone 1: Moving Train Prototype ✅
 - Project setup, git, `.gitignore`
 - Locomotive + armored railcar (placeholder geometry), configurable speed, path following
 - About 1 km downhill route with gentle curves (about 64 m drop)
@@ -67,8 +109,25 @@ visuals, and replayability.
 destruction, inventory and crafting, multiplayer, procedural worlds, upgrades,
 elaborate menus, full asset production.
 
-### Milestone 2: Turret combat (needs approval before starting)
-Mouse-aimed turret on `TurretMount`, hold-LMB continuous fire. Scope to be agreed.
+### Milestone 2: Turret combat ✅
+- Mouse-aimed heavy MG turret on the railcar, with hold-LMB continuous hitscan fire (11 rounds per second)
+- Muzzle flash, tracers, sparks, dust, splinters, explosions, recoil, hit markers, small destruction shake
+- Synthesized audio on three adjustable buses, with overlap capped
+- Destructible target course (plates, bunkers, explosive barrels with chain reactions, crates, generators)
+- Score, destroyed count, hits, and accuracy HUD, plus kill popups. Everything resets on run restart.
+- 38 headless checks. Measured performance is below.
+
+**Non-goals for M2 (deferred):** enemy AI, moving enemies, waves, upgrades,
+multiple weapons, reloading or ammo, large-scale destruction.
+
+**Measured performance** (2026-11-05, Radeon 8060S, RADV, Forward+,
+about 2069×1080 viewport, vsync off, 30 s of continuous auto-fire with 37
+targets destroyed): **avg 617 FPS, 1% low 588 FPS, worst frame 4.5 ms**.
+GPU cost is 1.6 ms per frame and CPU render cost 0.4 ms. The first second
+after load is slower (shader warm-up) and isn't included.
+
+### Milestone 3+ (needs approval)
+Enemy vehicles and drones, and wave spawning. They'll reuse `Damageable` and `HitscanWeapon`.
 
 ## Open questions for later milestones
 - Run length and end condition (reach the bottom? survive N waves?)

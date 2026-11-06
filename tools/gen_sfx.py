@@ -88,16 +88,27 @@ def mg_shot():
 
 
 def impact_metal():
-    """Bullet on armour: noisy tick + inharmonic ringing partials."""
+    """Bullet on armour: short dull clank (low-mid partials, fast decay).
+
+    Earlier version used ringing 2-6 kHz partials, which at 11 rps sounded
+    like a bell ("ding ding ding"). This one is mostly a thunk + gritty
+    noise burst so it sits under the gun instead of on top of it.
+    """
     rng = random.Random(2)
-    partials = [(1870, 0.07, 0.5), (2930, 0.05, 0.35), (4410, 0.04, 0.25), (6150, 0.025, 0.18), (980, 0.09, 0.3)]
-    hp = Highpass(1800)
+    partials = [(410, 0.022, 0.55), (655, 0.016, 0.4), (1040, 0.010, 0.25), (1530, 0.006, 0.12)]
+    noise_lp = Lowpass(2600)
+    hp = Highpass(300)
     out = []
-    for i in range(n_samples(0.32)):
+    phase = 0.0
+    for i in range(n_samples(0.16)):
         t = i / SR
-        tick = hp(rng.uniform(-1, 1)) * math.exp(-t / 0.004)
-        ring = sum(a * math.sin(2 * math.pi * f * t) * math.exp(-t / d) for f, d, a in partials)
-        out.append(soft_clip(tick * 1.2 + ring, 1.3))
+        w = rng.uniform(-1, 1)
+        grit = hp(noise_lp(w)) * math.exp(-t / 0.009) * 1.3
+        freq = 120 + 90 * math.exp(-t / 0.01)
+        phase += 2 * math.pi * freq / SR
+        thunk = math.sin(phase) * math.exp(-t / 0.028) * 0.9
+        clank = sum(a * math.sin(2 * math.pi * f * t + f) * math.exp(-t / d) for f, d, a in partials)
+        out.append(soft_clip(grit + thunk + clank, 1.4))
     return fade_tail(out)
 
 

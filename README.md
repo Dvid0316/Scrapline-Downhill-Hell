@@ -42,7 +42,9 @@ which takes about a second.
 | `Esc` | Release the mouse cursor. Click the window to grab it again. |
 
 While the window has focus, the cursor is hidden and kept inside the window,
-and the HUD draws the crosshair.
+and the HUD draws the crosshair. The **amber ring** is where the barrel is
+actually pointing, and that's where bullets go. The turret is heavy, so the ring
+swings after your cursor and locks on once it catches up.
 
 **HUD:** the score panel (top right) shows score, targets destroyed, hits, and
 accuracy. The crosshair flashes a white ✕ on a hit and an orange ✕ on a kill,
@@ -64,7 +66,7 @@ and 0.6° spread. Every second round is a tracer. There's no reloading.
 ## Tuning (Inspector, `scenes/main.tscn`)
 
 - **Combat/Weapon** (`HitscanWeapon`): `fire_rate`, `damage`, `max_range`, `spread_degrees`, `tracer_every`
-- **Train/ArmoredRailcar/TurretMount/HeavyMGTurret** (`MountedTurret`): yaw/pitch speed, pitch limits, front-arc limit, recoil, flash
+- **Train/ArmoredRailcar/TurretMount/HeavyMGTurret** (`MountedTurret`): yaw/pitch speed and acceleration, `settle_rate`, pitch limits, front-arc limit, recoil, flash
 - **Combat/Audio** (`CombatAudio`): per-sound volume, polyphony, impact rate limit. Also adjustable in the editor's **Audio** panel with three buses: *Weapons*, *Impacts*, *Explosions*.
 - **Combat/Effects** (`EffectsManager`): pool sizes, tracer speed and length, explosion size
 - **Combat/Feedback**: camera shake per destruction (`shake_per_destruction`, 0 = off)
@@ -76,7 +78,7 @@ and 0.6° spread. Every second round is a tracer. There's no reloading.
 ## Tests
 
 ```bash
-tests/run_all.sh     # import/parse + Milestone 1 (20 checks) + Milestone 2 (38 checks)
+tests/run_all.sh     # import/parse + Milestone 1 (20 checks) + Milestone 2 (39 checks)
 ```
 
 Or run them individually:

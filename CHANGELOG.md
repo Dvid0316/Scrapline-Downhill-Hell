@@ -3,6 +3,16 @@
 All notable changes to this project. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]: playtest tuning
+
+### Changed
+- **Turret has weight:** it accelerates, has a top speed (160°/s yaw, 90°/s pitch) and eases into the aim point instead of snapping to it. Feed-forward keeps steady tracking tight (under 1° while passing close targets). New Inspector knobs: `yaw_accel_degrees`, `pitch_accel_degrees`, `settle_rate`.
+- **Barrel reticle:** an amber ring shows where the gun *actually* points (shots go there). While the turret swings it lags the cursor, with a faint line between them, and it merges with the crosshair once the gun is on target.
+- **Metal impact sound** rebuilt as a short dull clank. The old one rang at 2–6 kHz and sounded like a bell at 11 rounds per second. Impacts are also quieter (−11 dB), more varied, and rate-limited to one every 70 ms.
+
+### Tests
+- New check: a big swing takes visible time, then settles on target. The tracking check now starts with the gun already on target. 39 checks in total.
+
 ## [0.2.0] - 2026-11-05: Milestone 2: Turret Combat
 
 ### Added

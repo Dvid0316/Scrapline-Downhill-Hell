@@ -24,6 +24,12 @@ var debug_auto_aim: bool = false
 ## Screen position currently aimed at (viewport coordinates).
 var aim_screen_position: Vector2
 var aim_world_point: Vector3
+## Where the barrel actually points right now (what a shot would hit).
+## The HUD draws a second reticle here; it lags the cursor while the
+## turret swings, and the two merge once the gun is on target.
+var gun_world_point: Vector3
+var gun_screen_position: Vector2
+var gun_point_visible: bool = false
 
 var _query := PhysicsRayQueryParameters3D.new()
 
@@ -47,8 +53,22 @@ func _physics_process(_delta: float) -> void:
 		aim_screen_position = camera.get_viewport().get_mouse_position()
 		aim_world_point = screen_to_aim_point(aim_screen_position)
 		turret.aim_at(aim_world_point)
+	_update_gun_point()
 	if weapon:
 		weapon.trigger_held = debug_auto_fire or Input.is_action_pressed(&"fire")
+
+
+func _update_gun_point() -> void:
+	var origin := turret.get_muzzle_transform().origin
+	var dir := turret.get_barrel_direction()
+	var reach := weapon.max_range if weapon else 320.0
+	_query.from = origin
+	_query.to = origin + dir * reach
+	var hit := camera.get_world_3d().direct_space_state.intersect_ray(_query)
+	gun_world_point = _query.to if hit.is_empty() else hit.position
+	gun_point_visible = not camera.is_position_behind(gun_world_point)
+	if gun_point_visible:
+		gun_screen_position = camera.unproject_position(gun_world_point)
 
 
 ## Viewport position → world aim point (terrain/targets; train ignored).

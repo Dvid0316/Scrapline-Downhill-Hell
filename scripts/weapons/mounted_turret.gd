@@ -12,8 +12,16 @@ extends Node3D
 ## shots also ignore the TRAIN physics layer completely.
 
 @export_group("Traverse")
-@export_range(10.0, 1080.0) var yaw_speed_degrees: float = 300.0
-@export_range(10.0, 720.0) var pitch_speed_degrees: float = 160.0
+## Top traverse speeds. The turret accelerates up to these and eases in as it
+## nears the aim point, so it feels like a heavy gun being swung, not a cursor.
+@export_range(10.0, 1080.0) var yaw_speed_degrees: float = 160.0
+@export_range(10.0, 720.0) var pitch_speed_degrees: float = 90.0
+## How quickly the turret gets up to speed (degrees/s²). Lower = heavier.
+@export_range(50.0, 5000.0) var yaw_accel_degrees: float = 900.0
+@export_range(50.0, 5000.0) var pitch_accel_degrees: float = 700.0
+## Easing near the target: wanted speed = remaining angle × this (1/s).
+## Higher = snappier stop, lower = softer settle.
+@export_range(1.0, 40.0) var settle_rate: float = 9.0
 @export_range(-45.0, 0.0) var min_pitch: float = -22.0
 @export_range(0.0, 85.0) var max_pitch: float = 60.0
 ## Half-angle of the forward cone where the locomotive blocks low shots.
@@ -36,6 +44,12 @@ var has_aim: bool = false
 @onready var _flash: Node3D = $Yaw/Pitch/Recoil/MuzzleFlash
 @onready var _flash_light: OmniLight3D = $Yaw/Pitch/Recoil/MuzzleFlash/FlashLight
 
+var _yaw_vel: float = 0.0
+var _pitch_vel: float = 0.0
+## Previous goal angles, to estimate how fast the aim point is moving
+## (feed-forward: steady tracking doesn't lag behind, big swings still ease).
+var _last_goal: Vector2
+var _has_last_goal := false
 var _flash_left: float = 0.0
 var _rng := RandomNumberGenerator.new()
 
@@ -53,8 +67,17 @@ func aim_at(world_point: Vector3) -> void:
 func _process(delta: float) -> void:
 	if has_aim:
 		var goal := _desired_angles(aim_point)
-		_yaw.rotation.y = _rotate_toward_angle(_yaw.rotation.y, goal.x, deg_to_rad(yaw_speed_degrees) * delta)
-		_pitch.rotation.x = move_toward(_pitch.rotation.x, goal.y, deg_to_rad(pitch_speed_degrees) * delta)
+		var goal_rate := Vector2.ZERO
+		if _has_last_goal and delta > 0.0:
+			goal_rate = Vector2(wrapf(goal.x - _last_goal.x, -PI, PI), goal.y - _last_goal.y) / delta
+		_last_goal = goal
+		_has_last_goal = true
+		var yaw_diff := wrapf(goal.x - _yaw.rotation.y, -PI, PI)
+		_yaw_vel = _drive(_yaw_vel, yaw_diff, goal_rate.x, yaw_speed_degrees, yaw_accel_degrees, delta)
+		_yaw.rotation.y = wrapf(_yaw.rotation.y + _yaw_vel * delta, -PI, PI)
+		var pitch_diff := goal.y - _pitch.rotation.x
+		_pitch_vel = _drive(_pitch_vel, pitch_diff, goal_rate.y, pitch_speed_degrees, pitch_accel_degrees, delta)
+		_pitch.rotation.x += _pitch_vel * delta
 	# Recoil spring back.
 	_recoil.position.z = move_toward(_recoil.position.z, 0.0, recoil_return_speed * recoil_distance * delta * 4.0)
 	if _flash_left > 0.0:
@@ -71,6 +94,10 @@ func snap_to_aim() -> void:
 	var goal := _desired_angles(aim_point)
 	_yaw.rotation.y = goal.x
 	_pitch.rotation.x = goal.y
+	_yaw_vel = 0.0
+	_pitch_vel = 0.0
+	_last_goal = goal
+	_has_last_goal = true
 
 
 ## (yaw, pitch) in radians needed to point the barrel at [param world_point],
@@ -89,9 +116,16 @@ func _desired_angles(world_point: Vector3) -> Vector2:
 	return Vector2(yaw, pitch)
 
 
-func _rotate_toward_angle(from: float, to: float, max_step: float) -> float:
-	var diff := wrapf(to - from, -PI, PI)
-	return from + clampf(diff, -max_step, max_step)
+## One axis of traverse. Wanted speed = how fast the goal is moving
+## (feed-forward) + remaining × settle_rate (eases in), capped at max speed.
+## The actual speed can only change by accel × delta per frame, which is the
+## "weight". Goal rate is clamped so a sudden mouse flick doesn't count as
+## steady motion.
+func _drive(vel: float, remaining: float, goal_rate: float, max_deg: float, accel_deg: float, delta: float) -> float:
+	var max_rad := deg_to_rad(max_deg)
+	var ff := clampf(goal_rate, -max_rad * 0.75, max_rad * 0.75)
+	var want := clampf(ff + remaining * settle_rate, -max_rad, max_rad)
+	return move_toward(vel, want, deg_to_rad(accel_deg) * delta)
 
 
 func get_muzzle_transform() -> Transform3D:

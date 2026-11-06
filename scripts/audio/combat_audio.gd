@@ -22,14 +22,14 @@ extends Node3D
 
 @export_group("Volume (dB)")
 @export_range(-40.0, 12.0) var gun_volume_db: float = -5.0
-@export_range(-40.0, 12.0) var impact_volume_db: float = -8.0
+@export_range(-40.0, 12.0) var impact_volume_db: float = -11.0
 @export_range(-40.0, 12.0) var explosion_volume_db: float = -2.0
 
 @export_group("Limits")
 @export_range(1, 8) var gun_polyphony: int = 3
 @export_range(1, 16) var impact_voices: int = 5
 ## Minimum seconds between impact sounds (rapid fire would otherwise spam).
-@export var impact_min_interval: float = 0.045
+@export var impact_min_interval: float = 0.07
 @export_range(1, 8) var explosion_voices: int = 3
 
 var _gun: AudioStreamPlayer
@@ -58,7 +58,7 @@ func _ready() -> void:
 	_gun.volume_db = gun_volume_db
 	_gun.bus = _bus_or_master(&"Weapons")
 	add_child(_gun)
-	_metal = _randomized(metal_impact_stream, 1.15, 2.0)
+	_metal = _randomized(metal_impact_stream, 1.2, 3.0)
 	_dirt = _randomized(dirt_impact_stream, 1.12, 2.0)
 	_wood = _randomized(wood_impact_stream, 1.12, 2.0)
 	for i in impact_voices:

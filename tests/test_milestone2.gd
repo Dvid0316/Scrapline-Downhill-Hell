@@ -110,6 +110,24 @@ func _test_camera_aim() -> void:
 	var p := input.screen_to_aim_point(screen)
 	_check(p.distance_to(centre) < 2.6,
 		"mouse ray hits the target under the cursor (%.2f m from centre)" % p.distance_to(centre))
+	# Swing: the turret is heavy now, so a big swing takes a moment but settles.
+	var start_aim := turret.global_position - turret.global_basis.z * -30.0
+	turret.aim_at(start_aim)
+	turret.snap_to_aim()
+	turret.aim_at(input.screen_to_aim_point(camera.unproject_position(target.get_effect_origin())))
+	var initial_err := turret.get_aim_error_degrees()
+	await physics_frame
+	await physics_frame
+	var early_err := turret.get_aim_error_degrees()
+	var frames := 0
+	while frames < 120:
+		await physics_frame
+		frames += 1
+		turret.aim_at(input.screen_to_aim_point(camera.unproject_position(target.get_effect_origin())))
+		if turret.get_aim_error_degrees() < 1.0:
+			break
+	_check(early_err > 5.0 and frames < 120,
+		"turret swings with weight, then settles (%.0f° → %.0f° after 2 frames, on target after %d frames)" % [initial_err, early_err, frames])
 	# Track it while the train moves and turns: the barrel should stay on it.
 	var worst := 0.0
 	for i in 60:

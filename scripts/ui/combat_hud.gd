@@ -26,6 +26,7 @@ func _ready() -> void:
 	crosshair = Crosshair.new()
 	crosshair.name = "Crosshair"
 	crosshair.aim_provider = _aim_position
+	crosshair.gun_provider = _gun_position
 	add_child(crosshair)
 
 	var panel := PanelContainer.new()
@@ -122,6 +123,12 @@ func _aim_position() -> Vector2:
 	if turret_input:
 		return turret_input.aim_screen_position
 	return crosshair.get_local_mouse_position()
+
+
+func _gun_position() -> Variant:
+	if turret_input and turret_input.gun_point_visible:
+		return turret_input.gun_screen_position
+	return null
 
 
 func _make_label(size: int, col: Color) -> Label:

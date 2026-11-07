@@ -7,6 +7,9 @@ extends Node3D
 ##   --capture-delay=3.0
 ##   --demo-fire           auto-aim at the nearest target and hold the trigger (screenshots/bench)
 ##   --bench=SECONDS       measure frame times, print a report, then quit (vsync off)
+##   --no-enemies          free-fire range only (no waves)
+##   --wave=N              start at wave N
+##   --god                 hull takes no damage
 
 @export var train: TrainController
 @export var camera: FollowCamera
@@ -18,6 +21,11 @@ extends Node3D
 @export var weapon: HitscanWeapon
 @export var turret_input: TurretInput
 @export var combat_hud: CombatHud
+
+@export_group("Enemies (Milestone 3)")
+@export var hull: TrainHull
+@export var director: WaveDirector
+@export var feedback: CombatFeedback
 
 @export_group("Debug tuning steps")
 @export var speed_step: float = 2.0
@@ -32,25 +40,66 @@ var _bench_seconds := 0.0
 var _bench_frames := PackedFloat32Array()
 var _bench_gpu_ms := 0.0
 var _bench_cpu_ms := 0.0
+var _start_wave := 1
+var game_over := false
 
 
 func _ready() -> void:
 	get_tree().auto_accept_quit = false  # we quit via quit_cleanly()
 	InputActions.register_defaults()
 	train.run_restarted.connect(_on_run_restarted)
+	train.route_looped.connect(_on_route_looped)
+	if hull:
+		hull.wrecked.connect(_on_train_wrecked)
 	if combat_hud and target_course:
 		combat_hud.set_total_targets(target_course.targets.size())
 	_parse_user_args()
+	if director:
+		director.reset(_start_wave)
 
 
-## New run: targets come back, score and accuracy start over.
+## New run: targets come back, score and accuracy start over, hull is
+## repaired and the waves start again from the top.
 func _on_run_restarted() -> void:
+	game_over = false
 	if target_course:
 		target_course.reset_all()
 	if score:
 		score.reset()
 	if weapon:
 		weapon.reset_stats()
+	if hull:
+		hull.reset()
+	if director:
+		director.reset(_start_wave)
+	if feedback:
+		feedback.reset()
+	if combat_hud:
+		combat_hud.hide_game_over()
+	if turret_input:
+		turret_input.set_physics_process(true)
+
+
+## End of the line: the train jumps back to the top and the run carries on.
+## The range targets come back so there's always something to shoot.
+func _on_route_looped() -> void:
+	if target_course:
+		target_course.reset_all()
+
+
+## Hull gone: the train brakes, the gun goes quiet, the waves stop.
+func _on_train_wrecked() -> void:
+	game_over = true
+	train.paused = true
+	if turret_input:
+		turret_input.set_physics_process(false)
+	if weapon:
+		weapon.trigger_held = false
+	if director:
+		director.stop()
+	if combat_hud:
+		combat_hud.show_game_over(director.wave if director else 0,
+			score.score if score else 0, score.enemy_kills if score else 0)
 
 
 func _parse_user_args() -> void:
@@ -65,6 +114,12 @@ func _parse_user_args() -> void:
 		elif arg == "--demo-fire" and turret_input:
 			turret_input.debug_auto_aim = true
 			turret_input.debug_auto_fire = true
+		elif arg == "--no-enemies" and director:
+			director.enabled = false
+		elif arg.begins_with("--wave="):
+			_start_wave = maxi(arg.get_slice("=", 1).to_int(), 1)
+		elif arg == "--god" and hull:
+			hull.invulnerable = true
 		elif arg.begins_with("--bench="):
 			_bench_seconds = arg.get_slice("=", 1).to_float()
 			DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
@@ -115,8 +170,10 @@ func _bench_step(delta: float) -> void:
 		get_viewport().get_visible_rect().size, RenderingServer.get_video_adapter_name()])
 	print("BENCH render cost per frame: GPU %.2f ms, CPU %.2f ms  (vsync-independent; 16.7 ms = 60 FPS budget)" % [
 		_bench_gpu_ms / n, _bench_cpu_ms / n])
-	print("BENCH shots=%d hits=%d destroyed=%d" % [
-		weapon.shots_fired if weapon else 0, weapon.shots_hit if weapon else 0, score.destroyed if score else 0])
+	print("BENCH shots=%d hits=%d destroyed=%d enemy_kills=%d wave=%d pooled_enemies=%d hull=%.0f" % [
+		weapon.shots_fired if weapon else 0, weapon.shots_hit if weapon else 0, score.destroyed if score else 0,
+		score.enemy_kills if score else 0, director.wave if director else 0,
+		director.get_pool_size() if director else 0, hull.hull if hull else 0.0])
 	_bench_seconds = 0.0
 	quit_cleanly()
 
@@ -151,7 +208,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("speed_down", true):
 		train.target_speed = clampf(train.target_speed - speed_step, 0.0, train.max_speed)
 	elif event.is_action_pressed("toggle_pause"):
-		train.paused = not train.paused
+		if not game_over:
+			train.paused = not train.paused
 	elif event.is_action_pressed("restart_run"):
 		train.restart()
 	elif event.is_action_pressed("toggle_debug"):

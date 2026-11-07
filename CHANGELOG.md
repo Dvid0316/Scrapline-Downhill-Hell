@@ -3,7 +3,29 @@
 All notable changes to this project. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]: playtest tuning
+## [0.3.0] - 2026-11-06: Milestone 3: Enemies and Waves
+
+### Added
+- **Enemies** (`scripts/enemies/`, `scenes/enemies/`), all extending `Damageable` via `EnemyBase`, so scoring, effects, and chain reactions work on them:
+  - **Raider buggy** and **gun truck** (`RaiderVehicle`): chase from behind on the shoulder, hold shifting attack slots beside the train, follow the terrain, and fire bursts.
+  - **Strafe drone** and **kamikaze drone** (`DroneEnemy`): fly in from ahead. Strafers dart around firing. Kamikazes arm (blink, beep, HUD bracket) and then dive for 45 hull damage. A kamikaze that's shot down explodes and damages nearby drones.
+  - Movement in a train-relative track frame, hit flash and scorch, and wrecks that fall or coast in world space before being recycled.
+- **Train hull** (`TrainHull`, 400 HP). Enemy rounds are hitscan against `WORLD | TRAIN`.
+- **Waves** (`WaveDirector`): 5 hand-made waves, then endless scaling (+25% enemies, +10% health per wave), breathers with a countdown, +15% hull repair per cleared wave, and per-kind pooling.
+- **Game over** when the hull is wrecked: a ripple of explosions, the train brakes, the gun locks, and a stats panel says "Press R". `R` starts a fresh run.
+- **HUD:** wave panel (top centre), hull bar, red damage vignette and low-hull pulse, wave banners, off-screen threat arrows, kamikaze warning bracket, game-over panel. The score panel splits enemy kills from range targets.
+- **Audio:** synthesized enemy gunshot, wave horn, wave-clear chime, and kamikaze beep (`tools/gen_sfx.py`). Existing sounds are unchanged.
+- Red hostile tracers (`fx_tracer_hostile.tres`), enemy paint material, and physics layer 4 `enemies`.
+- `tests/test_milestone3.gd` (65 checks). Dev flags `--wave=N`, `--god`, `--no-enemies`. The benchmark report includes wave, kills, and hull.
+
+### Changed
+- Reaching the end of the route now **loops without restarting the run** (`TrainController.route_looped`). Score, waves, and hull carry on, and the range targets come back.
+- `RailRoute.sample_world_extended()` extrapolates past the route ends (enemies just behind the start or past the end).
+- Tracer pool raised to 40 (shared by player and enemy tracers).
+- `--demo-fire` prefers enemies over range targets.
+- The Milestone 2 tests switch waves off (they test the range in isolation).
+
+## [0.2.1] - 2026-11-06: Playtest tuning
 
 ### Changed
 - **Turret has weight:** it accelerates, has a top speed (160°/s yaw, 90°/s pitch) and eases into the aim point instead of snapping to it. Feed-forward keeps steady tracking tight (under 1° while passing close targets). New Inspector knobs: `yaw_accel_degrees`, `pitch_accel_degrees`, `settle_rate`.

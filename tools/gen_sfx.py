@@ -188,6 +188,72 @@ def crate_break():
     return fade_tail(out)
 
 
+def enemy_shot():
+    """Enemy rifle-calibre round: thinner, snappier 'pap' than the player's MG,
+    so you can hear incoming fire without it fighting your own gun."""
+    rng = random.Random(7)
+    crack_lp, body_lp = Lowpass(6500), Lowpass(1400)
+    hp = Highpass(1800)
+    out = []
+    for i in range(n_samples(0.14)):
+        t = i / SR
+        w = rng.uniform(-1, 1)
+        crack = hp(crack_lp(w)) * math.exp(-t / 0.006) * 1.6
+        body = body_lp(w) * math.exp(-t / 0.018) * 1.1
+        ring = math.sin(2 * math.pi * 1250 * t) * math.exp(-t / 0.01) * 0.25
+        out.append(soft_clip(crack + body + ring, 1.5))
+    return fade_tail(out)
+
+
+def wave_horn():
+    """Wave incoming: two blasts of a low, slightly dissonant train-style horn."""
+    out = []
+    dur = 1.5
+    blasts = [(0.0, 0.55), (0.75, 1.45)]
+    lp = Lowpass(1800)
+    for i in range(n_samples(dur)):
+        t = i / SR
+        env = 0.0
+        for a, b in blasts:
+            if a <= t <= b:
+                env = min(1.0, (t - a) / 0.04) * min(1.0, (b - t) / 0.08)
+        s = 0.0
+        for f, amp in ((147.0, 1.0), (185.0, 0.8), (220.0, 0.6)):
+            # Sawtooth-ish: a few harmonics each.
+            for h in (1, 2, 3, 4):
+                s += amp / h * math.sin(2 * math.pi * f * h * t + h)
+        out.append(soft_clip(lp(s * env * 0.35), 1.3))
+    return fade_tail(out, 30)
+
+
+def wave_clear():
+    """Wave cleared: a quick rising three-note chime."""
+    out = []
+    notes = [(0.0, 523.25), (0.11, 659.25), (0.22, 783.99)]
+    for i in range(n_samples(0.9)):
+        t = i / SR
+        s = 0.0
+        for start, f in notes:
+            if t >= start:
+                dt = t - start
+                e = min(1.0, dt / 0.005) * math.exp(-dt / 0.28)
+                s += (math.sin(2 * math.pi * f * dt) + 0.3 * math.sin(4 * math.pi * f * dt)) * e
+        out.append(s * 0.5)
+    return fade_tail(out, 20)
+
+
+def kamikaze_beep():
+    """Kamikaze arming: short piercing double beep."""
+    out = []
+    for i in range(n_samples(0.22)):
+        t = i / SR
+        on = (t < 0.07) or (0.11 <= t < 0.18)
+        e = 1.0 if on else 0.0
+        s = (math.sin(2 * math.pi * 1760 * t) + 0.5 * math.sin(2 * math.pi * 2640 * t)) * e
+        out.append(s * 0.6)
+    return fade_tail(out)
+
+
 if __name__ == "__main__":
     write("mg_shot.wav", mg_shot())
     write("impact_metal.wav", impact_metal(), -3)
@@ -195,3 +261,7 @@ if __name__ == "__main__":
     write("impact_wood.wav", impact_wood(), -3)
     write("explosion.wav", explosion())
     write("crate_break.wav", crate_break(), -2)
+    write("enemy_shot.wav", enemy_shot(), -3)
+    write("wave_horn.wav", wave_horn(), -2)
+    write("wave_clear.wav", wave_clear(), -4)
+    write("kamikaze_beep.wav", kamikaze_beep(), -6)

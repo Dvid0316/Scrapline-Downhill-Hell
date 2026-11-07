@@ -19,11 +19,17 @@ extends Node3D
 @export var wood_impact_stream: AudioStream = preload("res://audio/sfx/impact_wood.wav")
 @export var explosion_stream: AudioStream = preload("res://audio/sfx/explosion.wav")
 @export var break_stream: AudioStream = preload("res://audio/sfx/crate_break.wav")
+@export var enemy_gun_stream: AudioStream = preload("res://audio/sfx/enemy_shot.wav")
+@export var wave_horn_stream: AudioStream = preload("res://audio/sfx/wave_horn.wav")
+@export var wave_clear_stream: AudioStream = preload("res://audio/sfx/wave_clear.wav")
+@export var warning_stream: AudioStream = preload("res://audio/sfx/kamikaze_beep.wav")
 
 @export_group("Volume (dB)")
 @export_range(-40.0, 12.0) var gun_volume_db: float = -5.0
 @export_range(-40.0, 12.0) var impact_volume_db: float = -11.0
 @export_range(-40.0, 12.0) var explosion_volume_db: float = -2.0
+@export_range(-40.0, 12.0) var enemy_gun_volume_db: float = -8.0
+@export_range(-40.0, 12.0) var cue_volume_db: float = -6.0
 
 @export_group("Limits")
 @export_range(1, 8) var gun_polyphony: int = 3
@@ -31,6 +37,9 @@ extends Node3D
 ## Minimum seconds between impact sounds (rapid fire would otherwise spam).
 @export var impact_min_interval: float = 0.07
 @export_range(1, 8) var explosion_voices: int = 3
+@export_range(1, 12) var enemy_gun_voices: int = 4
+## Minimum seconds between enemy gunshots (several enemies firing at once).
+@export var enemy_gun_min_interval: float = 0.035
 
 var _gun: AudioStreamPlayer
 var _impacts: Array[AudioStreamPlayer3D] = []
@@ -38,8 +47,13 @@ var _impact_next := 0
 var _blasts: Array[AudioStreamPlayer3D] = []
 var _blast_next := 0
 var _last_impact_time := -1.0
+var _enemy_guns: Array[AudioStreamPlayer3D] = []
+var _enemy_gun_next := 0
+var _last_enemy_gun_time := -1.0
+var _cue: AudioStreamPlayer
+var _warning: AudioStreamPlayer3D
 ## Requests per category (for tests/debug). Counted even when muted.
-var requested := {&"shot": 0, &"impact": 0, &"explosion": 0}
+var requested := {&"shot": 0, &"impact": 0, &"explosion": 0, &"enemy_shot": 0, &"cue": 0, &"warning": 0}
 ## Headless runs (CI/tests) have a dummy audio driver that never mixes, so
 ## playbacks would pile up unreleased. Count the requests but don't play.
 var _silent := false
@@ -65,6 +79,18 @@ func _ready() -> void:
 		_impacts.append(_make_3d("Impact%d" % i, &"Impacts", impact_volume_db, 25.0))
 	for i in explosion_voices:
 		_blasts.append(_make_3d("Blast%d" % i, &"Explosions", explosion_volume_db, 60.0))
+	var enemy_gun := _randomized(enemy_gun_stream, 1.12, 2.0)
+	for i in enemy_gun_voices:
+		var p := _make_3d("EnemyGun%d" % i, &"Weapons", enemy_gun_volume_db, 30.0)
+		p.stream = enemy_gun
+		_enemy_guns.append(p)
+	_cue = AudioStreamPlayer.new()
+	_cue.name = "Cue"
+	_cue.volume_db = cue_volume_db
+	_cue.max_polyphony = 2
+	add_child(_cue)
+	_warning = _make_3d("Warning", &"Weapons", cue_volume_db, 40.0)
+	_warning.stream = warning_stream
 
 
 ## Stop everything on shutdown/scene change so no playbacks outlive the scene
@@ -80,6 +106,12 @@ func stop_all() -> void:
 		p.stop()
 	for p in _blasts:
 		p.stop()
+	for p in _enemy_guns:
+		p.stop()
+	if _cue:
+		_cue.stop()
+	if _warning:
+		_warning.stop()
 
 
 func play_shot() -> void:
@@ -123,6 +155,41 @@ func play_explosion(point: Vector3, big: bool = true) -> void:
 	p.pitch_scale = randf_range(0.9, 1.08)
 	p.global_position = point
 	p.play()
+
+
+## Enemy gunfire, positional and rate-limited.
+func play_enemy_shot(point: Vector3) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	if now - _last_enemy_gun_time < enemy_gun_min_interval:
+		return
+	_last_enemy_gun_time = now
+	requested[&"enemy_shot"] += 1
+	if _silent:
+		return
+	var p := _enemy_guns[_enemy_gun_next]
+	_enemy_gun_next = (_enemy_gun_next + 1) % _enemy_guns.size()
+	p.volume_db = enemy_gun_volume_db
+	p.global_position = point
+	p.play()
+
+
+## Non-positional cue: &"wave_start" or &"wave_clear".
+func play_cue(cue: StringName) -> void:
+	requested[&"cue"] += 1
+	if _silent:
+		return
+	_cue.stream = wave_horn_stream if cue == &"wave_start" else wave_clear_stream
+	_cue.volume_db = cue_volume_db
+	_cue.play()
+
+
+## Kamikaze arming beep at its position.
+func play_warning(point: Vector3) -> void:
+	requested[&"warning"] += 1
+	if _silent:
+		return
+	_warning.global_position = point
+	_warning.play()
 
 
 func _make_3d(n: String, bus: StringName, vol: float, unit: float) -> AudioStreamPlayer3D:

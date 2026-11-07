@@ -92,7 +92,45 @@ Decisions:
 - **Audio** is synthesized placeholder audio from `tools/gen_sfx.py`. It's
   original, so there are no licensing concerns. Replace the files and keep the names.
 
-Physics layers: 1 `world` (terrain), 2 `train`, 3 `targets`.
+Physics layers: 1 `world` (terrain), 2 `train`, 3 `targets`, 4 `enemies`.
+
+## Enemy architecture (as of Milestone 3)
+
+| Concern | Node / script | Knows about |
+|---|---|---|
+| Enemy base | `EnemyBase` (extends `Damageable`) | train, route, terrain, hull (handed over on spawn) |
+| Ground raiders | `RaiderVehicle` | terrain height for driving |
+| Drones | `DroneEnemy` (strafer or kamikaze) | nothing extra |
+| Waves and pooling | `WaveDirector` | enemy scenes, hull (repairs between waves) |
+| Train health | `TrainHull` | the train's cars (aim points); nothing else |
+| Presentation | `CombatFeedback`, `CombatHud`, `ThreatIndicators` | events only |
+
+Decisions:
+- **Enemies live in the track frame.** Each one stores `rel_offset` (metres
+  along the route from the train front), `lateral`, and `height`, and is
+  placed from those every physics frame. It keeps pace with the train,
+  follows curves, and survives the route loop with no special cases. Wrecks
+  switch to world space so they fall or coast to a stop behind you.
+- **Same damage path as targets.** Enemies are `Damageable`s, so player
+  hitscan, scoring, explosions, popups, hit markers, and barrel chain
+  reactions all work on them unchanged.
+- **Enemy fire is hitscan** against `WORLD | TRAIN` (terrain blocks it; it
+  never hits other enemies or range targets). Each round is reported to the
+  `enemy_fire_listeners` group, and the presentation layer draws red
+  tracers and plays sounds from that.
+- **The hull is not a Damageable.** The train isn't scored or targetable by
+  the player, so `TrainHull` is a small separate health pool in the
+  `train_hull` group.
+- **Kamikazes telegraph.** Arm (hover, fast blink, beep, red HUD bracket)
+  for about 1.3 s before diving, so there's always a fair window to shoot them.
+- **Pooling:** each enemy kind is instanced the first time it's needed,
+  then reused. Despawned enemies are hidden, collision-free, and count as
+  destroyed, so area damage and aim helpers ignore them.
+- **Route loop ≠ restart.** `TrainController` now emits `route_looped`
+  (keep the run, bring the range targets back) separately from
+  `run_restarted` (new run).
+- **Run end condition** (open question from M2, now decided): survive as
+  many waves as you can. Game over when the hull hits zero.
 
 ## Milestones
 
@@ -126,10 +164,28 @@ targets destroyed): **avg 617 FPS, 1% low 588 FPS, worst frame 4.5 ms**.
 GPU cost is 1.6 ms per frame and CPU render cost 0.4 ms. The first second
 after load is slower (shader warm-up) and isn't included.
 
-### Milestone 3+ (needs approval)
-Enemy vehicles and drones, and wave spawning. They'll reuse `Damageable` and `HitscanWeapon`.
+### Milestone 3: Enemies and waves ✅
+- Four enemy types: raider buggy, gun truck, strafe drone, kamikaze drone (placeholder primitive models, oversized and hostile-red for readability)
+- Ground raiders chase from behind on the shoulder, hold attack slots beside the train, tilt with the terrain, and spin their wheels
+- Drones fly in from ahead and dart between orbit points. Kamikazes arm (with a warning) and then dive.
+- Enemy hitscan bursts with red tracers and their own gun sound. Train hull (400) with a HUD bar, red edge flash, and low-hull pulse.
+- `WaveDirector`: 5 hand-made waves, then endless scaling. Breathers with a countdown, a horn and a chime, and +15% hull per cleared wave.
+- Game over when the hull is wrecked (explosions, the train brakes, a stats panel). `R` restarts.
+- Off-screen threat arrows and a kamikaze warning bracket
+- 65 headless checks. Dev flags `--wave=N`, `--god`, `--no-enemies`.
+
+**Non-goals for M3 (deferred):** pathfinding around props (raiders drive
+through scenery on the shoulder), enemy-specific models and animation,
+upgrades and economy, multiple player weapons, ammo and overheat, boss
+enemies, difficulty settings, menus.
+
+**Measured performance** (2026-11-06, Radeon 8060S, Forward+, about
+2069×1080, 90 s of auto-play through waves 1–5 with 36 enemy kills): the
+frame rate held at the 145 Hz display cap (1% low 144 FPS, worst frame 6.9 ms).
+Render cost was GPU 2.1 ms and CPU 0.4 ms per frame.
+
+### Milestone 4+ (needs approval)
 
 ## Open questions for later milestones
-- Run length and end condition (reach the bottom? survive N waves?)
 - Whether the route will be one hand-authored line or a set of chained segments
 - Mouse handling during combat: cursor confined to the window vs. visible free cursor

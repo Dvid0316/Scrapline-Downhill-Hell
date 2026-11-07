@@ -104,7 +104,8 @@ func _capture_cursor() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CONFINED_HIDDEN
 
 
-## Demo only: the nearest live target ahead of the train, for screenshots and benchmarks.
+## Demo only: the nearest live target ahead of the train, for screenshots and
+## benchmarks. Enemies count as 40 m closer, so the demo fights back.
 func _pick_demo_target() -> Variant:
 	var best: Variant = null
 	var best_d := 85.0
@@ -115,6 +116,8 @@ func _pick_demo_target() -> Variant:
 			continue
 		var p: Vector3 = d.get_effect_origin() if d.has_method(&"get_effect_origin") else d.global_position + Vector3.UP
 		var dist := p.distance_to(turret.global_position)
+		if d is EnemyBase:
+			dist -= 40.0
 		if dist < best_d and (p - camera.global_position).dot(cam_fwd) > 0.0:
 			best_d = dist
 			best = p

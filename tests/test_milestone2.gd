@@ -43,6 +43,8 @@ func _run() -> void:
 	camera = main.get_node("FollowCamera")
 	railcar = main.get_node("Train/ArmoredRailcar")
 	loco = main.get_node("Train/Locomotive")
+	# Milestone 2 is about the range: no enemy waves in these tests (see test_milestone3).
+	(main.get_node("Combat/WaveDirector") as WaveDirector).set_enabled(false)
 	input.set_physics_process(false)    # no mouse headless; we drive aim directly
 	weapon.set_physics_process(false)   # we step the trigger manually for exact timing
 	await _frames(3)

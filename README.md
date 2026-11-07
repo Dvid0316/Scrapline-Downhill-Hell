@@ -3,10 +3,12 @@
 Single-player arcade train-defense game (Godot 4 / GDScript).
 You ride a mounted gun on an armored train screaming down a mountain line.
 
-**Current state: Milestone 2, turret combat.** The train rolls downhill on its
-own. You aim a heavy machine gun with the mouse and hold left-click to shred a
-course of destructible targets (steel plates, bunkers, explosive barrels,
-crates, generators) for points. No enemies yet.
+**Current state: Milestone 3, enemies and waves.** The train rolls downhill on
+its own. You aim a heavy machine gun with the mouse and hold left-click. Raider
+buggies, gun trucks, strafing drones and kamikaze drones come at you in waves
+and chip away at the train's hull. Survive as many waves as you can. The range
+targets from Milestone 2 (plates, bunkers, barrels, crates, generators) are
+still there for bonus points.
 
 ## Requirements
 
@@ -33,7 +35,7 @@ which takes about a second.
 | **Hold left mouse button** | Continuous fire. Release to stop. |
 | `W` / `S` or `↑` / `↓` (also `+` / `-`) | Raise / lower train target speed |
 | `Space` | Pause / resume the train |
-| `R` | Restart the run. Targets come back and the score resets. |
+| `R` | Restart the run: full hull, wave 1, score resets. (Also how you continue after the train is wrecked.) |
 | `[` / `]` | Camera pitch (clamped 45–60°) |
 | `,` / `.` or mouse wheel | Camera distance |
 | `;` / `'` | Camera look-ahead |
@@ -46,9 +48,27 @@ and the HUD draws the crosshair. The **amber ring** is where the barrel is
 actually pointing, and that's where bullets go. The turret is heavy, so the ring
 swings after your cursor and locks on once it catches up.
 
-**HUD:** the score panel (top right) shows score, targets destroyed, hits, and
-accuracy. The crosshair flashes a white ✕ on a hit and an orange ✕ on a kill,
-and a "+points NAME" popup floats over each destroyed target.
+**HUD:**
+- **Top centre:** current wave, plus how many hostiles are left (or a countdown to the next wave).
+- **Top right:** score, enemies destroyed, range targets destroyed, hits, and accuracy.
+- **Bottom centre:** hull bar (green → amber → red). The screen edges flash red when you're hit and pulse when the hull is under 25%.
+- **Red arrows** on the screen edge point at enemies you can't see. An armed or diving **kamikaze** gets a big pulsing arrow, or a red bracket when it's on screen. Shoot that one first.
+- The crosshair flashes a white ✕ on a hit and an orange ✕ on a kill, and a "+points NAME" popup floats over each kill.
+
+## Enemies and waves
+
+| Enemy | HP | Points | What it does |
+|---|---|---|---|
+| Raider buggy (red) | 60 | 150 | Chases up from behind on the shoulder, holds beside the train, fires 5-round bursts |
+| Gun truck | 240 | 400 | Slow, armoured, twin gun, 10-round bursts. Shows up from wave 4. |
+| Strafe drone (dark red) | 24 | 100 | Flies in from ahead and darts around the train firing short bursts |
+| Kamikaze drone (yellow, red warhead) | 20 | 125 | Hovers and **beeps** for about a second (arming), then dives at the gun car for 45 hull. Shot down, it explodes and takes nearby drones with it. |
+
+- The hull has 400 points. Enemy rounds do 1.5–3 each, and a kamikaze that gets through does 45.
+- **Wave flow:** a few seconds' breather (with a countdown), then a horn and the wave spawns over a few seconds. Kill everything and you get a chime plus **+15% hull**, then the next breather.
+- Waves 1–5 introduce one thing at a time (drones → raiders → kamikazes → gun truck → everything). After wave 5 they keep growing (+25% enemies and +10% enemy health per wave), so every run ends eventually.
+- At the bottom of the line the train loops back to the top **without** ending the run. The range targets come back, and enemies keep chasing.
+- When the hull hits zero the train blows up and brakes, and the game-over panel shows your wave and score. Press `R` to go again.
 
 ## Scoring
 
@@ -73,12 +93,15 @@ and 0.6° spread. Every second round is a tracer. There's no reloading.
 - **FollowCamera**: framing, smoothing, `shake_enabled`, `max_shake_offset`
 - **TargetCourse**: cluster spacing, seed, and which scenes it uses
 - Target scenes (`scenes/targets/*.tscn`): `max_health`, `points`, barrel `blast_radius` / `blast_damage`
+- **Combat/WaveDirector** (`WaveDirector`): breather lengths, `max_alive`, `repair_per_wave`, seed. Wave contents are the `WAVES` table at the top of `scripts/enemies/wave_director.gd`.
+- **Combat/TrainHull** (`TrainHull`): `max_hull`, `invulnerable`
+- Enemy scenes (`scenes/enemies/*.tscn`): HP and points, gun (`fire_rate`, `burst_rounds`, `round_damage`, `spread_degrees`, `fire_range`), driving or flight settings, and kamikaze `impact_damage` / `arm_time` / `dive_speed`
 - Plus everything from Milestone 1: train speed, route shape, terrain, and props
 
 ## Tests
 
 ```bash
-tests/run_all.sh     # import/parse + Milestone 1 (20 checks) + Milestone 2 (39 checks)
+tests/run_all.sh     # import/parse + Milestone 1 (20) + Milestone 2 (39) + Milestone 3 (65 checks)
 ```
 
 Or run them individually:
@@ -87,6 +110,7 @@ Or run them individually:
 godot --headless --path . --import
 godot --headless --path . --fixed-fps 60 -s res://tests/test_milestone1.gd
 godot --headless --path . --fixed-fps 60 -s res://tests/test_milestone2.gd
+godot --headless --path . --fixed-fps 60 -s res://tests/test_milestone3.gd
 ```
 
 Headless runs can't simulate the mouse or play sound. The M2 tests drive the
@@ -100,7 +124,10 @@ Pass these after `--`:
 ```bash
 godot --path . -- --start-at=0.5                       # start halfway down
 godot --path . -- --capture=captures/shot.png --capture-delay=3   # screenshot, then quit
-godot --path . -- --demo-fire                          # auto-aim at nearby targets and fire (demo only)
+godot --path . -- --demo-fire                          # auto-aim (enemies first) and fire (demo only)
+godot --path . -- --wave=4                             # start at wave 4
+godot --path . -- --god                                # hull takes no damage
+godot --path . -- --no-enemies                         # Milestone 2 free-fire range, no waves
 godot --path . --resolution 1920x1080 -- --demo-fire --bench=30   # FPS + GPU/CPU frame cost report
 python3 tools/gen_sfx.py                               # regenerate the placeholder sounds
 ```
@@ -113,19 +140,22 @@ scenes/
   train/                train (controller), locomotive, armored_railcar, bogie
   weapons/              heavy_mg_turret.tscn (mounted on the railcar's TurretMount)
   targets/              armored_plate, armored_bunker, explosive_barrel, wooden_crate, power_generator
+  enemies/              raider_buggy, gun_truck, strafe_drone, kamikaze_drone
   camera/ track/ environment/props/ ui/ (debug_hud, combat_hud)
 scripts/
   core/       main.gd, input_actions.gd, physics_layers.gd
   train/      train_controller.gd, train_car.gd
   weapons/    mounted_turret.gd (aim + visuals), hitscan_weapon.gd (fire logic), turret_input.gd (mouse)
   combat/     damageable.gd → destructible_target.gd → explosive_barrel.gd,
-              target_course.gd, score_tracker.gd, combat_feedback.gd (glue)
+              target_course.gd, score_tracker.gd, train_hull.gd, combat_feedback.gd (glue)
+  enemies/    enemy_base.gd (extends Damageable) → raider_vehicle.gd, drone_enemy.gd;
+              wave_director.gd (waves + pooling)
   effects/    effects_manager.gd (pooled tracers, impacts, explosions)
   audio/      combat_audio.gd
-  camera/ track/ environment/ ui/
+  camera/ track/ environment/ ui/ (combat_hud, crosshair, threat_indicators)
 audio/sfx/    synthesized WAVs (see tools/gen_sfx.py)
 materials/    StandardMaterial3D .tres files
-tests/        run_all.sh, test_milestone1.gd, test_milestone2.gd
+tests/        run_all.sh, test_milestone1.gd, test_milestone2.gd, test_milestone3.gd
 tools/        gen_sfx.py
 ```
 

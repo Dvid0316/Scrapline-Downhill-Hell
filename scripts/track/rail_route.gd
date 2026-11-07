@@ -68,6 +68,18 @@ func sample_world(offset: float) -> Vector3:
 	return to_global(curve.sample_baked(d, true))
 
 
+## Like [method sample_world], but continues in a straight line past either
+## end of the route instead of clamping. Enemies use it so they can sit a
+## little behind the start or ahead of the end without bunching up.
+func sample_world_extended(offset: float) -> Vector3:
+	var l := get_length()
+	if offset < 0.0:
+		return sample_world(0.0) + tangent_world(1.0) * offset
+	if offset > l:
+		return sample_world(l) + tangent_world(l - 1.0) * (offset - l)
+	return sample_world(offset)
+
+
 ## World-space unit tangent (direction of travel) at [param offset].
 func tangent_world(offset: float, span: float = 1.0) -> Vector3:
 	var a := sample_world(offset - span)

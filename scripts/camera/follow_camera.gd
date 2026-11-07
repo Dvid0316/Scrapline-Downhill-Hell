@@ -65,6 +65,7 @@ func _ready() -> void:
 		push_error("FollowCamera: no train assigned")
 		return
 	train.run_restarted.connect(snap)
+	train.route_looped.connect(snap)
 	snap()
 
 

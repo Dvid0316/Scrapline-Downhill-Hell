@@ -6,7 +6,7 @@ extends Node3D
 ## reused (effects are short enough that nobody notices).
 
 @export_group("Pool sizes")
-@export_range(4, 128) var tracer_pool: int = 24
+@export_range(4, 128) var tracer_pool: int = 40
 @export_range(2, 64) var impact_pool: int = 14
 @export_range(1, 16) var explosion_pool: int = 5
 
@@ -21,6 +21,7 @@ extends Node3D
 
 const SPARK_MAT := preload("res://materials/fx_spark.tres")
 const TRACER_MAT := preload("res://materials/fx_tracer.tres")
+const HOSTILE_TRACER_MAT := preload("res://materials/fx_tracer_hostile.tres")
 const DEBRIS_MAT := preload("res://materials/fx_debris.tres")
 const DUST_MAT := preload("res://materials/fx_dust.tres")
 const SPLINTER_MAT := preload("res://materials/sleeper_wood.tres")
@@ -87,7 +88,8 @@ func _build_tracers() -> void:
 		_tr_travel[i] = 0.0
 
 
-func spawn_tracer(from: Vector3, to: Vector3) -> void:
+## [param hostile] = red enemy tracer instead of the player's amber one.
+func spawn_tracer(from: Vector3, to: Vector3, hostile: bool = false) -> void:
 	var i := _tr_next
 	_tr_next = (_tr_next + 1) % tracer_pool
 	var v := to - from
@@ -95,6 +97,7 @@ func spawn_tracer(from: Vector3, to: Vector3) -> void:
 	_tr_total[i] = v.length()
 	_tr_dir[i] = v / maxf(_tr_total[i], 0.001)
 	_tr_travel[i] = 0.0
+	_tracers[i].material_override = HOSTILE_TRACER_MAT if hostile else TRACER_MAT
 	_tracers[i].visible = true
 	_update_tracer(i)
 

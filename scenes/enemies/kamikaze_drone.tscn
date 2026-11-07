@@ -1,0 +1,275 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/drone_enemy.gd" id="1"]
+[ext_resource type="Material" path="res://materials/hazard_yellow.tres" id="2"]
+[ext_resource type="Material" path="res://materials/armor_dark.tres" id="3"]
+[ext_resource type="Material" path="res://materials/lamp_red.tres" id="4"]
+[ext_resource type="Material" path="res://materials/steel_worn.tres" id="5"]
+[ext_resource type="Material" path="res://materials/glass_dark.tres" id="6"]
+[ext_resource type="Material" path="res://materials/target_red.tres" id="7"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(1.1, 0.45, 1.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.8, 0.25, 0.9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.5, 0.18, 0.06)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.12, 0.1, 1.5)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_5"]
+top_radius = 0.13
+bottom_radius = 0.13
+height = 0.25
+radial_segments = 12
+rings = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(1.0, 0.03, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(0.12, 0.03, 1.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.12, 0.1, 1.5)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_9"]
+top_radius = 0.13
+bottom_radius = 0.13
+height = 0.25
+radial_segments = 12
+rings = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(1.0, 0.03, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(0.12, 0.03, 1.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
+size = Vector3(0.12, 0.1, 1.5)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_13"]
+top_radius = 0.13
+bottom_radius = 0.13
+height = 0.25
+radial_segments = 12
+rings = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_14"]
+size = Vector3(1.0, 0.03, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_15"]
+size = Vector3(0.12, 0.03, 1.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_16"]
+size = Vector3(0.12, 0.1, 1.5)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_17"]
+top_radius = 0.13
+bottom_radius = 0.13
+height = 0.25
+radial_segments = 12
+rings = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_18"]
+size = Vector3(1.0, 0.03, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_19"]
+size = Vector3(0.12, 0.03, 1.0)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_20"]
+top_radius = 0.3
+bottom_radius = 0.3
+height = 0.9
+radial_segments = 12
+rings = 1
+
+[sub_resource type="SphereMesh" id="SphereMesh_21"]
+radius = 0.3
+height = 0.6
+radial_segments = 12
+rings = 6
+
+[sub_resource type="BoxMesh" id="BoxMesh_22"]
+size = Vector3(1.12, 0.1, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_23"]
+size = Vector3(1.12, 0.1, 0.2)
+
+[sub_resource type="SphereMesh" id="SphereMesh_24"]
+radius = 0.2
+height = 0.4
+radial_segments = 12
+rings = 6
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_25"]
+radius = 1.9
+
+[node name="KamikazeDrone" type="Node3D"]
+script = ExtResource("1")
+kind = "kamikaze"
+max_health = 20.0
+points = 125
+display_name = "KAMIKAZE"
+surface = "metal"
+explosion_scale = 1.6
+armed = false
+kamikaze = true
+cruise_speed = 20.0
+wreck_time = 2.5
+
+[node name="Intact" type="Node3D" parent="."]
+scale = Vector3(1.6, 1.6, 1.6)
+
+[node name="Core" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 0.0, 0.0)
+mesh = SubResource("BoxMesh_1")
+material_override = ExtResource("2")
+
+[node name="Belly" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, -0.3, 0.0)
+mesh = SubResource("BoxMesh_2")
+material_override = ExtResource("3")
+
+[node name="Eye" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 0.02, -0.66)
+mesh = SubResource("BoxMesh_3")
+material_override = ExtResource("4")
+
+[node name="Arm0" type="MeshInstance3D" parent="Intact"]
+position = Vector3(-0.475, 0.08, -0.475)
+mesh = SubResource("BoxMesh_4")
+material_override = ExtResource("3")
+rotation_degrees = Vector3(0.0, 45.0, 0.0)
+
+[node name="Motor0" type="MeshInstance3D" parent="Intact"]
+position = Vector3(-0.95, 0.15, -0.95)
+mesh = SubResource("CylinderMesh_5")
+material_override = ExtResource("5")
+
+[node name="Rotor0" type="Node3D" parent="Intact"]
+position = Vector3(-0.95, 0.3, -0.95)
+
+[node name="Blade" type="MeshInstance3D" parent="Intact/Rotor0"]
+position = Vector3(0.0, 0.0, 0.0)
+mesh = SubResource("BoxMesh_6")
+material_override = ExtResource("6")
+
+[node name="Blade2" type="MeshInstance3D" parent="Intact/Rotor0"]
+position = Vector3(0.0, 0.0, 0.0)
+mesh = SubResource("BoxMesh_7")
+material_override = ExtResource("6")
+
+[node name="Arm1" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.475, 0.08, -0.475)
+mesh = SubResource("BoxMesh_8")
+material_override = ExtResource("3")
+rotation_degrees = Vector3(0.0, -45.0, 0.0)
+
+[node name="Motor1" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.95, 0.15, -0.95)
+mesh = SubResource("CylinderMesh_9")
+material_override = ExtResource("5")
+
+[node name="Rotor1" type="Node3D" parent="Intact"]
+position = Vector3(0.95, 0.3, -0.95)
+
+[node name="Blade" type="MeshInstance3D" parent="Intact/Rotor1"]
+position = Vector3(0.0, 0.0, 0.0)
+mesh = SubResource("BoxMesh_10")
+material_override = ExtResource("6")
+
+[node name="Blade2" type="MeshInstance3D" parent="Intact/Rotor1"]
+position = Vector3(0.0, 0.0, 0.0)
+mesh = SubResource("BoxMesh_11")
+material_override = ExtResource("6")
+
+[node name="Arm2" type="MeshInstance3D" parent="Intact"]
+position = Vector3(-0.475, 0.08, 0.475)
+mesh = SubResource("BoxMesh_12")
+material_override = ExtResource("3")
+rotation_degrees = Vector3(0.0, -45.0, 0.0)
+
+[node name="Motor2" type="MeshInstance3D" parent="Intact"]
+position = Vector3(-0.95, 0.15, 0.95)
+mesh = SubResource("CylinderMesh_13")
+material_override = ExtResource("5")
+
+[node name="Rotor2" type="Node3D" parent="Intact"]
+position = Vector3(-0.95, 0.3, 0.95)
+
+[node name="Blade" type="MeshInstance3D" parent="Intact/Rotor2"]
+position = Vector3(0.0, 0.0, 0.0)
+mesh = SubResource("BoxMesh_14")
+material_override = ExtResource("6")
+
+[node name="Blade2" type="MeshInstance3D" parent="Intact/Rotor2"]
+position = Vector3(0.0, 0.0, 0.0)
+mesh = SubResource("BoxMesh_15")
+material_override = ExtResource("6")
+
+[node name="Arm3" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.475, 0.08, 0.475)
+mesh = SubResource("BoxMesh_16")
+material_override = ExtResource("3")
+rotation_degrees = Vector3(0.0, 45.0, 0.0)
+
+[node name="Motor3" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.95, 0.15, 0.95)
+mesh = SubResource("CylinderMesh_17")
+material_override = ExtResource("5")
+
+[node name="Rotor3" type="Node3D" parent="Intact"]
+position = Vector3(0.95, 0.3, 0.95)
+
+[node name="Blade" type="MeshInstance3D" parent="Intact/Rotor3"]
+position = Vector3(0.0, 0.0, 0.0)
+mesh = SubResource("BoxMesh_18")
+material_override = ExtResource("6")
+
+[node name="Blade2" type="MeshInstance3D" parent="Intact/Rotor3"]
+position = Vector3(0.0, 0.0, 0.0)
+mesh = SubResource("BoxMesh_19")
+material_override = ExtResource("6")
+
+[node name="Warhead" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, -0.55, -0.1)
+mesh = SubResource("CylinderMesh_20")
+material_override = ExtResource("7")
+rotation_degrees = Vector3(90.0, 0.0, 0.0)
+
+[node name="Nose" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, -0.55, -0.55)
+mesh = SubResource("SphereMesh_21")
+material_override = ExtResource("7")
+
+[node name="StripeA" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 0.2, -0.3)
+mesh = SubResource("BoxMesh_22")
+material_override = ExtResource("3")
+
+[node name="StripeB" type="MeshInstance3D" parent="Intact"]
+position = Vector3(0.0, 0.2, 0.3)
+mesh = SubResource("BoxMesh_23")
+material_override = ExtResource("3")
+
+[node name="Beacon" type="Node3D" parent="Intact"]
+position = Vector3(0.0, 0.32, 0.0)
+
+[node name="Light" type="MeshInstance3D" parent="Intact/Beacon"]
+position = Vector3(0.0, 0.0, 0.0)
+mesh = SubResource("SphereMesh_24")
+material_override = ExtResource("4")
+
+[node name="Body" type="AnimatableBody3D" parent="."]
+collision_layer = 8
+collision_mask = 0
+sync_to_physics = false
+
+[node name="Shape0" type="CollisionShape3D" parent="Body"]
+position = Vector3(0.0, 0.0, 0.0)
+shape = SubResource("SphereShape3D_25")

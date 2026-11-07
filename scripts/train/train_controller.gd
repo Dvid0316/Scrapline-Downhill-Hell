@@ -9,6 +9,9 @@ extends Node3D
 
 signal run_restarted
 signal run_finished
+## The train reached the end of the line and jumped back to the start.
+## Unlike [signal run_restarted], the run (score, waves, hull) carries on.
+signal route_looped
 
 @export var route: RailRoute
 
@@ -23,7 +26,7 @@ signal run_finished
 @export var coupling_gap: float = 1.0
 ## Height of the rail top above the route centreline (see TrackBuilder).
 @export var ride_height: float = 0.33
-## Restart from the beginning when the end of the route is reached.
+## Jump back to the start (same run) when the end of the route is reached.
 @export var loop_route: bool = true
 
 var speed: float = 0.0
@@ -43,11 +46,24 @@ func _ready() -> void:
 	restart()
 
 
+## New run: back to the start, brakes off. Everything listening resets.
 func restart() -> void:
-	head_distance = get_consist_length() + 2.0
+	paused = false
+	head_distance = get_start_distance()
 	speed = target_speed
 	_place_cars()
 	run_restarted.emit()
+
+
+## End of the line: jump back to the start without ending the run.
+func loop_to_start() -> void:
+	head_distance = get_start_distance()
+	_place_cars()
+	route_looped.emit()
+
+
+func get_start_distance() -> float:
+	return get_consist_length() + 2.0
 
 
 func _process(delta: float) -> void:
@@ -57,7 +73,7 @@ func _process(delta: float) -> void:
 	var end := route.get_length()
 	if head_distance >= end:
 		if loop_route:
-			restart()
+			loop_to_start()
 			return
 		head_distance = end
 		speed = 0.0
@@ -102,7 +118,7 @@ func get_progress_ratio() -> float:
 
 func set_progress_ratio(ratio: float) -> void:
 	head_distance = clampf(ratio, 0.0, 1.0) * get_route_length()
-	head_distance = maxf(head_distance, get_consist_length() + 2.0)
+	head_distance = maxf(head_distance, get_start_distance())
 	_place_cars()
 
 

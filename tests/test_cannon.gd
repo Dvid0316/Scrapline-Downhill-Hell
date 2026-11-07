@@ -43,7 +43,7 @@ func _run() -> void:
 	input.set_physics_process(false)
 	mg.set_physics_process(false)
 	cannon.set_physics_process(false)
-	train.set_progress_ratio(0.3)
+	train.set_head_distance(316.0)  # absolute, so route changes don't move the test
 	train.target_speed = 0.0
 	train.speed = 0.0
 	await _frames(3)

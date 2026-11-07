@@ -19,6 +19,7 @@ extends CanvasLayer
 @export var popup_time: float = 1.1
 
 var crosshair: Crosshair
+var speed_hud: SpeedHud
 var _score_label: Label
 var _detail_label: Label
 var _popups: Array[Label] = []
@@ -98,6 +99,12 @@ func _ready() -> void:
 		_popup_age[i] = 99.0
 	_build_wave_panel()
 	_build_hull_bar()
+	speed_hud = SpeedHud.new()
+	speed_hud.name = "SpeedHud"
+	if camera is FollowCamera:
+		speed_hud.train = (camera as FollowCamera).train
+	add_child(speed_hud)
+	move_child(speed_hud, 0)  # behind the other HUD elements
 	_build_banner()
 	_build_game_over()
 	_vignette = ColorRect.new()

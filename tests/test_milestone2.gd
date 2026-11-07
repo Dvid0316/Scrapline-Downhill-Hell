@@ -85,7 +85,7 @@ func _test_setup() -> void:
 
 ## 1. Turret stays attached through curves and grades.
 func _test_attachment() -> void:
-	train.set_progress_ratio(0.35)
+	train.set_head_distance(370.0)  # absolute, so route changes don't move the test
 	train.target_speed = 25.0
 	train.speed = 25.0
 	var mount: Node3D = railcar.get_node("TurretMount")

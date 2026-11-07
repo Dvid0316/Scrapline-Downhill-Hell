@@ -36,7 +36,7 @@ which takes about a second.
 | **Mouse** | Aim the turret (a crosshair follows the cursor) |
 | **Hold left mouse button** | Machine gun: continuous fire. Release to stop. |
 | **Right mouse button** (or `E`) | Heavy cannon: about 2 explosive shells a second. Hold it to keep firing. Works at the same time as the MG. |
-| `W` / `S` or `↑` / `↓` (also `+` / `-`) | Raise / lower train target speed |
+| `W` / `S` or `↑` / `↓` (also `+` / `-`) | Raise / lower the speed the driver holds. On the rollercoaster drops gravity takes over and you go much faster (250+ km/h at full throttle). |
 | `Space` | Pause / resume the train |
 | `R` | Restart the run: full hull, wave 1, score resets. (Also how you continue after the train is wrecked.) |
 | `[` / `]` | Camera pitch (clamped 45–60°) |

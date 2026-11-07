@@ -20,16 +20,24 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var out := "captures/train"
+	var at_ratio := 0.22
+	var shots := SHOTS
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out = a.get_slice("=", 1)
+		elif a.begins_with("--at="):
+			at_ratio = a.get_slice("=", 1).to_float()
+		elif a == "--wide":
+			# Far side views for the track/trestles.
+			shots = [["Locomotive", Vector3(-45.0, 6.0, 40.0), Vector3(0, -2.0, -10.0)],
+				["Locomotive", Vector3(55.0, 10.0, -60.0), Vector3(0, -8.0, -20.0)]]
 	var main: Node = (load("res://scenes/main.tscn") as PackedScene).instantiate()
 	root.add_child(main)
 	await process_frame
 	var director: WaveDirector = main.get_node("Combat/WaveDirector")
 	director.set_enabled(false)
 	var train: TrainController = main.get_node("Train")
-	train.set_progress_ratio(0.22)
+	train.set_progress_ratio(at_ratio)
 	train.target_speed = 0.0
 	train.speed = 0.0
 	var follow: Node = main.get_node("FollowCamera")
@@ -49,8 +57,8 @@ func _run() -> void:
 	cam.make_current()
 	for f in 30:
 		await process_frame
-	for i in SHOTS.size():
-		var s: Array = SHOTS[i]
+	for i in shots.size():
+		var s: Array = shots[i]
 		var car: Node3D = main.get_node("Train/" + str(s[0]))
 		var eye: Vector3 = car.global_transform * (s[1] as Vector3)
 		var at: Vector3 = car.global_transform * (s[2] as Vector3)

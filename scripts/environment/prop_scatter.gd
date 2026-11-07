@@ -64,6 +64,10 @@ func scatter() -> void:
 		if s == 0:
 			s = -1 if rng.randf() < 0.5 else 1
 		lateral *= float(s)
+		# Trackside props only where the track sits on its ground (not on a
+		# trestle/embankment or down in a cutting): no gantries over thin air.
+		if terrain != null and absf(lateral) < 14.0 and absf(terrain.track_lift(off)) > 1.5:
+			continue
 		var centre := route.sample_world(off)
 		var t := route.tangent_world(off)
 		var flat_t := Vector3(t.x, 0.0, t.z).normalized()

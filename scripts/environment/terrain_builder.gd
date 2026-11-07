@@ -30,6 +30,19 @@ extends Node3D
 @export var noise_amplitude: float = 9.0
 @export var noise_seed: int = 7
 
+@export_group("Rollercoaster ground")
+## On the coaster section the ground follows the valleys instead of the
+## track, so crests stand on trestles and dips cut into the hills.
+@export var coaster_ground: bool = true
+## Window (metres either side) for the valley envelope.
+@export var envelope_window: float = 45.0
+## Smoothing window for the ground line.
+@export var ground_smoothing: float = 35.0
+## The track never stands more than this far above the ground.
+@export var max_lift: float = 26.0
+## Up to this height the track runs on an earth embankment; higher = trestle.
+@export var embankment_max: float = 5.0
+
 ## Build a static collider (WORLD layer) so shots and the aim ray hit the ground.
 @export var generate_collision: bool = true
 
@@ -48,6 +61,9 @@ var _grid_nx: int = 0
 var _grid_nz: int = 0
 var _grid_min: Vector2
 var _grid_dist: PackedFloat32Array
+# Ground line under the route (world y), sampled every GROUND_STEP metres.
+const GROUND_STEP := 2.0
+var _ground: PackedFloat32Array
 
 
 func _ready() -> void:
@@ -70,6 +86,63 @@ func _setup() -> void:
 	var a := route.sample_world(0.0)
 	var b := route.sample_world(route.get_length())
 	_mean_y = (a.y + b.y) * 0.5
+	_build_ground_line()
+
+
+## Ground elevation under the track: equal to the track on the gentle part;
+## on the coaster, a smoothed lower envelope of the track (the valleys).
+func _build_ground_line() -> void:
+	var length := route.get_length()
+	var n := int(ceil(length / GROUND_STEP)) + 1
+	var track := PackedFloat32Array()
+	track.resize(n)
+	for i in n:
+		track[i] = route.sample_world(i * GROUND_STEP).y
+	_ground = track.duplicate()
+	if not coaster_ground or not route.has_method(&"get_coaster_start"):
+		return
+	var w := int(envelope_window / GROUND_STEP)
+	var env := PackedFloat32Array()
+	env.resize(n)
+	for i in n:
+		var m := INF
+		for k in range(maxi(i - w, 0), mini(i + w, n - 1) + 1):
+			m = minf(m, track[k])
+		env[i] = maxf(m, track[i] - max_lift)
+	var sw := int(ground_smoothing / GROUND_STEP)
+	for pass_i in 2:
+		var sm := PackedFloat32Array()
+		sm.resize(n)
+		for i in n:
+			var sum := 0.0
+			var cnt := 0
+			for k in range(maxi(i - sw, 0), mini(i + sw, n - 1) + 1):
+				sum += env[k]
+				cnt += 1
+			sm[i] = sum / cnt
+		env = sm
+	var start: float = route.get_coaster_start()
+	for i in n:
+		var f := smoothstep(start - 20.0, start + 60.0, i * GROUND_STEP)
+		_ground[i] = lerpf(track[i], minf(env[i], track[i] + 2.0), f)
+
+
+## Ground elevation under the route at [param offset].
+func ground_at(offset: float) -> float:
+	if _ground.is_empty():
+		return route.sample_world(offset).y
+	var f := clampf(offset / GROUND_STEP, 0.0, _ground.size() - 1.001)
+	var i := int(f)
+	return lerpf(_ground[i], _ground[i + 1], f - i)
+
+
+## How far the track stands above its ground at [param offset] (negative = cutting).
+func track_lift(offset: float) -> float:
+	return route.sample_world(offset).y - ground_at(offset)
+
+
+func is_trestle(offset: float) -> bool:
+	return track_lift(offset) > embankment_max
 
 
 ## Relation of a world XZ point to the track: x = signed lateral distance
@@ -148,7 +221,18 @@ func analytic_height(x: float, z: float) -> float:
 
 func _height_from_relation(x: float, z: float, rel: Vector3) -> float:
 	var d := absf(rel.x)
-	var base := rel.y - 0.35
+	var bed := rel.y - 0.35
+	var ground := ground_at(rel.z) - 0.35
+	var lift := bed - ground
+	var base := bed
+	if lift > embankment_max:
+		# Trestle: natural ground everywhere, the track flies over it.
+		base = ground
+	elif absf(lift) > 0.05:
+		# Embankment (lift > 0) or cutting (lift < 0): slope from the bed out
+		# to the natural ground.
+		var reach := bed_half_width + 1.0 + absf(lift) * (2.2 if lift > 0.0 else 1.4)
+		base = lerpf(bed, ground, smoothstep(bed_half_width, reach, d))
 	if d <= bed_half_width:
 		return base
 	var s := smoothstep(bed_half_width, bed_half_width + shoulder_width, d)
@@ -190,6 +274,8 @@ func build() -> void:
 	dists.resize(nx * nz)
 	var sides := PackedByteArray()
 	sides.resize(nx * nz)
+	var flying := PackedByteArray()
+	flying.resize(nx * nz)
 	for j in nz:
 		for i in nx:
 			var x := min_v.x + i * cell_size
@@ -198,6 +284,7 @@ func build() -> void:
 			heights[j * nx + i] = _height_from_relation(x, z, rel)
 			dists[j * nx + i] = absf(rel.x)
 			sides[j * nx + i] = 1 if rel.x < 0.0 else 0
+			flying[j * nx + i] = 1 if is_trestle(rel.z) else 0
 
 	_grid = heights
 	_grid_dist = dists
@@ -218,7 +305,7 @@ func build() -> void:
 			var x := min_v.x + i * cell_size
 			var z := min_v.y + j * cell_size
 			st.set_normal(normal)
-			st.set_color(_color_for(normal, dists[idx], x, z, sides[idx] == 1))
+			st.set_color(_color_for(normal, dists[idx] + (40.0 if flying[idx] == 1 else 0.0), x, z, sides[idx] == 1))
 			st.set_uv(Vector2(x, z) * 0.05)
 			st.add_vertex(to_local(Vector3(x, heights[idx], z)))
 	for j in nz - 1:

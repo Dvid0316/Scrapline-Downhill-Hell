@@ -11,7 +11,10 @@ extends Path3D
 ## Overall travel direction is roughly world -Z (Godot's "forward").
 
 ## Control points in this node's local space (metres). Y is elevation.
-## Keep successive points descending for a downhill run.
+## The first ~1 km is the original gentle descent (shooting gallery); after
+## [member coaster_start_index] it becomes a rollercoaster: a lift hill, a big
+## drop, camelback humps and a final plunge. The train has gravity, so the
+## drops build real speed.
 @export var control_points: PackedVector3Array = PackedVector3Array([
 	Vector3(0, 70, 60),
 	Vector3(0, 70, 0),
@@ -29,7 +32,37 @@ extends Path3D
 	Vector3(60, 11, -830),
 	Vector3(55, 7, -900),
 	Vector3(50, 6, -960),
+	# --- Rollercoaster section ---
+	Vector3(45, 6, -1020),
+	Vector3(40, 12, -1080),     # lift hill
+	Vector3(36, 22, -1140),
+	Vector3(34, 32, -1200),
+	Vector3(34, 36, -1245),     # crest 1
+	Vector3(36, 26, -1285),
+	Vector3(40, 2, -1345),      # first drop
+	Vector3(46, -14, -1405),
+	Vector3(52, -18, -1455),    # valley
+	Vector3(56, -8, -1505),
+	Vector3(56, -4, -1545),     # crest 2
+	Vector3(52, -16, -1590),
+	Vector3(44, -30, -1640),
+	Vector3(36, -32, -1690),    # valley
+	Vector3(30, -26, -1735),    # camelback humps
+	Vector3(26, -27, -1770),
+	Vector3(24, -40, -1815),
+	Vector3(26, -46, -1855),
+	Vector3(30, -42, -1895),
+	Vector3(34, -50, -1935),
+	Vector3(38, -75, -2000),    # THE PLUNGE
+	Vector3(40, -105, -2075),
+	Vector3(40, -122, -2145),
+	Vector3(38, -128, -2215),   # run-out
+	Vector3(36, -129, -2285),
+	Vector3(34, -129, -2345),
 ])
+
+## Index of the first rollercoaster control point (the gentle part ends here).
+@export var coaster_start_index: int = 16
 
 ## Bezier handle length as a fraction of the neighbour span. ~0.16 = Catmull-Rom.
 @export_range(0.05, 0.4) var handle_scale: float = 0.17
@@ -60,6 +93,12 @@ func rebuild() -> void:
 
 func get_length() -> float:
 	return curve.get_baked_length()
+
+
+## Route offset where the rollercoaster section begins.
+func get_coaster_start() -> float:
+	var i := clampi(coaster_start_index - 1, 0, control_points.size() - 1)
+	return curve.get_closest_offset(control_points[i])
 
 
 ## World-space position on the track centreline at [param offset] metres.

@@ -40,6 +40,15 @@ extends Camera3D
 ## Trauma lost per second.
 @export_range(0.1, 10.0) var shake_decay: float = 2.2
 
+@export_group("Speed")
+## Extra field of view (degrees) at high speed: starts above
+## [member fov_speed_start] m/s and tops out at +[member fov_kick_max].
+@export var fov_speed_start: float = 25.0
+@export var fov_per_mps: float = 0.4
+@export var fov_kick_max: float = 16.0
+## Rumble (screen shake) above this speed, m/s.
+@export var rumble_speed: float = 50.0
+
 @export_group("Limits")
 @export var min_pitch: float = 45.0
 @export var max_pitch: float = 60.0
@@ -88,7 +97,20 @@ func _process(delta: float) -> void:
 	_focus = _focus.lerp(_target_focus(), pk)
 	_yaw = lerp_angle(_yaw, _target_yaw(), yk)
 	_apply()
+	_update_speed_feel(delta)
 	_update_shake(delta)
+
+
+var _base_fov: float = -1.0
+
+
+func _update_speed_feel(delta: float) -> void:
+	if _base_fov < 0.0:
+		_base_fov = fov
+	var kick := clampf((train.speed - fov_speed_start) * fov_per_mps, 0.0, fov_kick_max)
+	fov = lerpf(fov, _base_fov + kick, _smooth_factor(3.0, delta))
+	if train.speed > rumble_speed and shake_enabled:
+		_trauma = maxf(_trauma, clampf((train.speed - rumble_speed) / 40.0, 0.0, 0.35))
 
 
 ## Add screen shake (0..1). Shake moves the lens sideways via h/v_offset, so
@@ -116,7 +138,10 @@ func _smooth_factor(rate: float, delta: float) -> float:
 
 
 func _target_focus() -> Vector3:
-	var d := train.get_centre_distance() + look_ahead
+	# Lead by speed / smoothing so the exponential follow doesn't trail the
+	# train at high speed (steady-state lag of the smoothing is v / rate).
+	var lead := train.speed / position_smoothing if position_smoothing > 0.0 else 0.0
+	var d := train.get_centre_distance() + look_ahead + lead
 	return train.route.sample_world(d) + Vector3.UP * aim_height
 
 

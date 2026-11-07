@@ -10,6 +10,7 @@ extends Node3D
 ##   --no-enemies          free-fire range only (no waves)
 ##   --wave=N              start at wave N
 ##   --god                 hull takes no damage
+##   --speed=KMH           start at this speed (also sets the throttle, capped)
 
 @export var train: TrainController
 @export var camera: FollowCamera
@@ -122,6 +123,10 @@ func _parse_user_args() -> void:
 			director.enabled = false
 		elif arg.begins_with("--wave="):
 			_start_wave = maxi(arg.get_slice("=", 1).to_int(), 1)
+		elif arg.begins_with("--speed="):
+			var v := arg.get_slice("=", 1).to_float() / 3.6
+			train.speed = v
+			train.target_speed = minf(v, train.max_speed)
 		elif arg == "--god" and hull:
 			hull.invulnerable = true
 		elif arg.begins_with("--bench="):

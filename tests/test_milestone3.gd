@@ -45,7 +45,7 @@ func _run() -> void:
 	input.set_physics_process(false)
 	weapon.set_physics_process(false)
 	director.set_enabled(false)  # tests spawn by hand until the wave test
-	train.set_progress_ratio(0.3)
+	train.set_head_distance(316.0)  # absolute, so route changes don't move the test
 	await _frames(3)
 
 	_test_setup()

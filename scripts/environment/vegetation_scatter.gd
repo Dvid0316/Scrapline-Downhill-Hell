@@ -17,6 +17,9 @@ const SHADER := preload("res://shaders/stylized_foliage.gdshader")
 @export var tree_attempts: int = 9000
 @export var bush_attempts: int = 5000
 @export var grass_attempts: int = 110000
+## Attempt counts are per this much terrain area (m²) and scale with the
+## actual terrain size, so a longer route keeps the same density.
+@export var reference_area: float = 455000.0
 
 @export_group("Clearance from the track (m)")
 @export var tree_min_distance: float = 30.0
@@ -48,7 +51,8 @@ func build() -> void:
 	var trees: Array[Transform3D] = []
 	var bushes: Array[Transform3D] = []
 	var grass: Array[Transform3D] = []
-	for i in tree_attempts:
+	var k := bounds.get_area() / reference_area
+	for i in int(tree_attempts * k):
 		var p := _random_point(rng, bounds)
 		var forest := _noise.get_noise_2d(p.x, p.y)
 		if forest < 0.05 + rng.randf() * 0.25:
@@ -58,7 +62,7 @@ func build() -> void:
 			continue
 		var s := rng.randf_range(0.8, 1.45)
 		trees.append(_xf(t, rng, Vector3(s, s * rng.randf_range(0.9, 1.25), s), 0.3))
-	for i in bush_attempts:
+	for i in int(bush_attempts * k):
 		var p := _random_point(rng, bounds)
 		if _noise.get_noise_2d(p.x + 300.0, p.y) < -0.25 + rng.randf() * 0.2:
 			continue
@@ -67,7 +71,7 @@ func build() -> void:
 			continue
 		var s := rng.randf_range(0.7, 1.6)
 		bushes.append(_xf(t, rng, Vector3(s, s * rng.randf_range(0.6, 0.9), s), -0.15))
-	for i in grass_attempts:
+	for i in int(grass_attempts * k):
 		var p := _random_point(rng, bounds)
 		var t: Variant = _ground(p, grass_min_distance, 0.8)
 		if t == null:

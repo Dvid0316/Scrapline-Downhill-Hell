@@ -30,10 +30,19 @@ visuals, and replayability.
 - **RailRoute** (`Path3D`) is the single source of truth for the line. It's
   authored as control points, with smooth handles generated automatically.
   Every other system samples it.
-- **Train movement is path following**, not a physics simulation.
+- **Train movement is path following with 1-D physics along the track.**
   `TrainController` keeps `head_distance` (metres along the route) and places
   each `TrainCar` by sampling the curve at its two bogie pivots, so the cars
-  yaw on curves and pitch on grades.
+  yaw on curves and pitch on grades. Speed comes from `step_speed()`: arcade
+  gravity along the slope (`gravity_scale`), air drag, and engine and brakes
+  steering toward the driver's set speed within limits. The brakes hold the
+  gentle grades, but the steep coaster drops overpower them on purpose.
+- **Route:** the first ~1 km is the gentle descent (the shooting gallery).
+  After `coaster_start_index` it becomes a rollercoaster: a lift hill, drops
+  of up to ~43%, camelback humps, and a final plunge, for ~2.5 km in total.
+  On that section `TerrainBuilder` lays the ground along the valleys (a
+  smoothed lower envelope of the track), so crests stand on
+  **TrestleBuilder** wooden trestles and dips cut into the hills.
 - **Geometry is separate from logic.** Car scenes (`locomotive.tscn`,
   `armored_railcar.tscn`, `bogie.tscn`) contain only meshes, plus a small
   metadata script (`car_length`, `bogie_spacing`). Swapping in real models
@@ -137,7 +146,8 @@ Decisions:
 ### Milestone 1: Moving Train Prototype ✅
 - Project setup, git, `.gitignore`
 - Locomotive + armored railcar (placeholder geometry), configurable speed, path following
-- About 1 km downhill route with gentle curves (about 64 m drop)
+- About 1 km downhill route with gentle curves (about 64 m drop). Later
+  extended with a rollercoaster section (see the changelog, 0.6.0).
 - Terrain, cliffs, rocks, and industrial props (containers, tanks, signals, ore gantries)
 - Angled-overhead follow camera, adjustable at runtime
 - Debug controls and overlay (speed, progress, grade, camera, FPS)

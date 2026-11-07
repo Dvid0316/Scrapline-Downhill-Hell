@@ -36,6 +36,8 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/kamikaze_drone.tscn" id="34_kamikaze_dr"]
 [ext_resource type="Shader" path="res://shaders/stylized_sky.gdshader" id="35_sky_shader"]
 [ext_resource type="Script" path="res://scripts/environment/vegetation_scatter.gd" id="36_vegetation"]
+[ext_resource type="Script" path="res://scripts/track/trestle_builder.gd" id="37_trestle"]
+[ext_resource type="Material" path="res://materials/crate_wood.tres" id="38_trestle_wood"]
 
 [sub_resource type="ShaderMaterial" id="SkyMaterial_1"]
 shader = ExtResource("35_sky_shader")
@@ -107,6 +109,12 @@ directional_shadow_max_distance = 220.0
 script = ExtResource("3_terrain_buil")
 route = NodePath("../Track")
 material = ExtResource("4_terrain")
+
+[node name="Trestles" type="Node3D" parent="." node_paths=PackedStringArray("route", "terrain")]
+script = ExtResource("37_trestle")
+route = NodePath("../Track")
+terrain = NodePath("../Terrain")
+material = ExtResource("38_trestle_wood")
 
 [node name="Vegetation" type="Node3D" parent="." node_paths=PackedStringArray("terrain")]
 script = ExtResource("36_vegetation")

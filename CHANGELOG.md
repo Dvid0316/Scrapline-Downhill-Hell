@@ -3,6 +3,23 @@
 All notable changes to this project. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.0] - 2026-11-06: Rollercoaster track
+
+### Added
+- **Rollercoaster section** after the original ~1 km descent. The route is now about 2.5 km: a lift hill, a 40% first drop, a second crest, camelback humps, and a final plunge into the canyon.
+- **Train physics:** arcade gravity along the slope (`gravity_scale` 3×), air drag, an engine that pulls toward the set speed, and brakes that hold up to 2.8 m/s². The gentle section plays exactly as before (it holds the set speed), while the steep drops overpower the brakes. You reach about 225 km/h at the default setting and 255 km/h at full throttle, with a hard cap of 306 km/h. Climbs bleed momentum. `Space` still brakes to a stop, even on the steepest drop.
+- **Trestles** (`TrestleBuilder`): wooden rollercoaster bents with splayed legs, ties, and X-bracing wherever the track flies over the ground. They're drawn as two MultiMeshes.
+- **Coaster ground:** on the coaster the terrain follows the valleys, not the track. Crests stand up to ~17 m above the ground, low runs sit on embankments, and dips cut into the hills. Trackside props skip anywhere the track isn't at ground level.
+- **Speed feel** (`SpeedHud`): a chunky speedometer (km/h, set-speed tick, grade arrow ▲/▼ %) that goes white → orange → red, speed lines streaming in from the screen edges, and a camera FOV kick (up to +16°) with rumble above 180 km/h.
+- `--speed=KMH` dev flag. `tools/speed_profile.gd` prints a headless speed-vs-distance sim of the whole route. `tools/train_preview.gd --at=0.84 --wide` takes side views of the track.
+- `tests/test_coaster.gd` (22 checks): track shape, physics (holds speed on the gentle part, drops build speed, climbs bleed it, terminal cap, braking), trestles and ground, camera and HUD at speed.
+
+### Changed
+- The camera leads by speed / smoothing, so it doesn't trail the train at high speed.
+- Vegetation attempt counts scale with terrain area, which keeps the density on the longer map.
+- Tests place the train at absolute distances (`TrainController.set_head_distance`) instead of route ratios, so extending the route doesn't move them. A cannon check had become flaky at the old 30% spot, which is now a steeper part of the line.
+- Startup is about 3.6 s (bigger terrain). In combat on the coaster, the GPU takes about 4.6 ms per frame at 1080p.
+
 ## [0.5.2] - 2026-11-06: Readable crosshair
 
 Playtest feedback: the crosshair blended into the bright terrain.

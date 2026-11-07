@@ -16,11 +16,27 @@ signal route_looped
 @export var route: RailRoute
 
 @export_group("Speed")
-## Speed the train accelerates/brakes toward, in m/s (14 m/s ≈ 50 km/h).
+## Speed the driver holds (W/S), in m/s (14 m/s ≈ 50 km/h).
 @export_range(0.0, 60.0, 0.5) var target_speed: float = 14.0
+## Highest speed the driver can ask for.
 @export_range(1.0, 80.0, 0.5) var max_speed: float = 40.0
-## m/s² used when changing speed. High values feel instant.
+## Engine pull in m/s² (used below the target speed).
 @export_range(0.1, 30.0) var acceleration: float = 5.0
+
+@export_group("Physics")
+## Arcade gravity: 1.0 = real, higher = wilder drops. 0 = no gravity.
+@export_range(0.0, 5.0) var gravity_scale: float = 3.0
+## Strongest braking used to hold the target speed (m/s²). Enough to hold the
+## gentle grades; the steep coaster drops overpower it on purpose.
+@export_range(0.0, 20.0) var brake_decel: float = 2.8
+## Hard brake when paused (Space).
+@export_range(0.0, 30.0) var pause_brake: float = 6.0
+## Air drag (m/s² per (m/s)²): sets the terminal velocity on the drops.
+@export_range(0.0, 0.01, 0.00001) var drag: float = 0.00012
+## Absolute speed limit, whatever gravity says (m/s; 85 ≈ 306 km/h).
+@export_range(1.0, 150.0) var terminal_speed: float = 85.0
+## Never roll backwards; a stalled climb just stops.
+const MIN_SPEED := 0.0
 
 @export_group("Consist")
 @export var coupling_gap: float = 1.0
@@ -67,8 +83,7 @@ func get_start_distance() -> float:
 
 
 func _process(delta: float) -> void:
-	var goal := 0.0 if paused else clampf(target_speed, 0.0, max_speed)
-	speed = move_toward(speed, goal, acceleration * delta)
+	speed = step_speed(speed, delta)
 	head_distance += speed * delta
 	var end := route.get_length()
 	if head_distance >= end:
@@ -79,6 +94,28 @@ func _process(delta: float) -> void:
 		speed = 0.0
 		run_finished.emit()
 	_place_cars()
+
+
+## One physics step of the train's speed (pure function of state, testable).
+## Gravity along the track + drag, with the engine/brakes steering toward
+## the target speed within their limits.
+func step_speed(v: float, delta: float) -> float:
+	var g := -9.81 * gravity_scale * get_slope()
+	var a := g - drag * v * v
+	if paused:
+		return clampf(move_toward(v, 0.0, pause_brake * delta), MIN_SPEED, terminal_speed)
+	var goal := clampf(target_speed, 0.0, max_speed)
+	# Control force that would close the gap in ~0.5 s, after cancelling gravity.
+	var want := (goal - v) / 0.5 - a
+	a += clampf(want, -brake_decel, acceleration)
+	return clampf(v + a * delta, MIN_SPEED, terminal_speed)
+
+
+## Sine of the track pitch under the middle of the train (+ = uphill).
+func get_slope() -> float:
+	if route == null:
+		return 0.0
+	return route.tangent_world(get_centre_distance(), 4.0).y
 
 
 func _place_cars() -> void:
@@ -119,6 +156,12 @@ func get_progress_ratio() -> float:
 func set_progress_ratio(ratio: float) -> void:
 	head_distance = clampf(ratio, 0.0, 1.0) * get_route_length()
 	head_distance = maxf(head_distance, get_start_distance())
+	_place_cars()
+
+
+## Put the train's front at [param distance] metres along the route.
+func set_head_distance(distance: float) -> void:
+	head_distance = clampf(distance, get_start_distance(), get_route_length())
 	_place_cars()
 
 

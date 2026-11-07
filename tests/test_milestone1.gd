@@ -47,13 +47,14 @@ func _static_checks() -> void:
 	_check(drop > 20.0, "route descends (%.1f m drop)" % drop)
 	_check(_train.cars.size() == 2, "train has locomotive + railcar (%d cars)" % _train.cars.size())
 
-	# Route is downhill everywhere (no climbing sections > 0.5%).
+	# The original gentle part is downhill everywhere (no climbs > 0.5%).
+	# After it comes the rollercoaster section (tests/test_coaster.gd).
 	var worst := -INF
 	var d := 20.0
-	while d < length - 20.0:
+	while d < route.get_coaster_start() - 40.0:
 		worst = maxf(worst, route.grade_percent(d))
 		d += 10.0
-	_check(worst < 0.5, "no uphill sections (max grade %+.2f %%)" % worst)
+	_check(worst < 0.5, "no uphill on the gentle section (max grade %+.2f %%)" % worst)
 
 	# Generated geometry exists.
 	var rails := _main.get_node("Track/Rails")

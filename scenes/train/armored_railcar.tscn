@@ -2,66 +2,9 @@
 
 [ext_resource type="PackedScene" path="res://scenes/train/bogie.tscn" id="1_bogie"]
 [ext_resource type="Script" path="res://scripts/train/train_car.gd" id="2_train_car"]
-[ext_resource type="Material" path="res://materials/armor_dark.tres" id="3_armor_dark"]
-[ext_resource type="Material" path="res://materials/armor_plate.tres" id="4_armor_plate"]
-[ext_resource type="Material" path="res://materials/hazard_yellow.tres" id="5_hazard_yello"]
-[ext_resource type="Material" path="res://materials/steel_worn.tres" id="6_steel_worn"]
-[ext_resource type="Material" path="res://materials/rust.tres" id="7_rust"]
-[ext_resource type="Material" path="res://materials/lamp_red.tres" id="8_lamp_red"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_1"]
-size = Vector3(3.0, 0.5, 13.6)
-
-[sub_resource type="BoxMesh" id="BoxMesh_2"]
-size = Vector3(3.0, 1.9, 12.8)
-
-[sub_resource type="BoxMesh" id="BoxMesh_3"]
-size = Vector3(0.12, 0.9, 12.0)
-
-[sub_resource type="BoxMesh" id="BoxMesh_4"]
-size = Vector3(0.1, 1.4, 3.6)
-
-[sub_resource type="BoxMesh" id="BoxMesh_5"]
-size = Vector3(0.1, 1.4, 3.6)
-
-[sub_resource type="BoxMesh" id="BoxMesh_6"]
-size = Vector3(0.1, 1.4, 3.6)
-
-[sub_resource type="BoxMesh" id="BoxMesh_7"]
-size = Vector3(0.15, 0.7, 12.8)
-
-[sub_resource type="BoxMesh" id="BoxMesh_8"]
-size = Vector3(0.12, 0.9, 12.0)
-
-[sub_resource type="BoxMesh" id="BoxMesh_9"]
-size = Vector3(0.1, 1.4, 3.6)
-
-[sub_resource type="BoxMesh" id="BoxMesh_10"]
-size = Vector3(0.1, 1.4, 3.6)
-
-[sub_resource type="BoxMesh" id="BoxMesh_11"]
-size = Vector3(0.1, 1.4, 3.6)
-
-[sub_resource type="BoxMesh" id="BoxMesh_12"]
-size = Vector3(0.15, 0.7, 12.8)
-
-[sub_resource type="BoxMesh" id="BoxMesh_13"]
-size = Vector3(2.7, 0.7, 0.15)
-
-[sub_resource type="BoxMesh" id="BoxMesh_14"]
-size = Vector3(3.02, 0.22, 0.04)
-
-[sub_resource type="BoxMesh" id="BoxMesh_15"]
-size = Vector3(0.4, 0.3, 0.6)
-
-[sub_resource type="BoxMesh" id="BoxMesh_16"]
-size = Vector3(2.7, 0.7, 0.15)
-
-[sub_resource type="BoxMesh" id="BoxMesh_17"]
-size = Vector3(3.02, 0.22, 0.04)
-
-[sub_resource type="BoxMesh" id="BoxMesh_18"]
-size = Vector3(0.4, 0.3, 0.6)
+[ext_resource type="Script" path="res://scripts/train/car_body.gd" id="3_car_body"]
+[ext_resource type="Material" path="res://materials/armor_dark.tres" id="4_armor_dark"]
+[ext_resource type="Material" path="res://materials/steel_worn.tres" id="5_steel_worn"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_19"]
 top_radius = 1.25
@@ -77,27 +20,6 @@ height = 0.12
 radial_segments = 24
 rings = 1
 
-[sub_resource type="BoxMesh" id="BoxMesh_21"]
-size = Vector3(1.0, 0.6, 1.2)
-
-[sub_resource type="BoxMesh" id="BoxMesh_22"]
-size = Vector3(0.9, 0.5, 1.0)
-
-[sub_resource type="BoxMesh" id="BoxMesh_23"]
-size = Vector3(0.8, 0.4, 0.6)
-
-[sub_resource type="SphereMesh" id="SphereMesh_24"]
-radius = 0.1
-height = 0.2
-radial_segments = 8
-rings = 4
-
-[sub_resource type="SphereMesh" id="SphereMesh_25"]
-radius = 0.1
-height = 0.2
-radial_segments = 8
-rings = 4
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_26"]
 size = Vector3(3.0, 3.0, 14.0)
 
@@ -106,10 +28,9 @@ script = ExtResource("2_train_car")
 car_length = 14.0
 bogie_spacing = 9.0
 
-[node name="Frame" type="MeshInstance3D" parent="."]
-position = Vector3(0.0, 1.25, 0.0)
-mesh = SubResource("BoxMesh_1")
-material_override = ExtResource("3_armor_dark")
+[node name="Body" type="MeshInstance3D" parent="."]
+script = ExtResource("3_car_body")
+kind = 1
 
 [node name="BogieFront" parent="." instance=ExtResource("1_bogie")]
 position = Vector3(0.0, 0.0, -4.5)
@@ -117,128 +38,18 @@ position = Vector3(0.0, 0.0, -4.5)
 [node name="BogieRear" parent="." instance=ExtResource("1_bogie")]
 position = Vector3(0.0, 0.0, 4.5)
 
-[node name="Hull" type="MeshInstance3D" parent="."]
-position = Vector3(0.0, 2.45, 0.0)
-mesh = SubResource("BoxMesh_2")
-material_override = ExtResource("4_armor_plate")
-
-[node name="SkirtL" type="MeshInstance3D" parent="."]
-position = Vector3(-1.56, 0.95, 0.0)
-mesh = SubResource("BoxMesh_3")
-material_override = ExtResource("4_armor_plate")
-
-[node name="SlatL0" type="MeshInstance3D" parent="."]
-position = Vector3(-1.56, 2.5, -4.3)
-mesh = SubResource("BoxMesh_4")
-material_override = ExtResource("3_armor_dark")
-
-[node name="SlatL1" type="MeshInstance3D" parent="."]
-position = Vector3(-1.56, 2.5, 0.0)
-mesh = SubResource("BoxMesh_5")
-material_override = ExtResource("3_armor_dark")
-
-[node name="SlatL2" type="MeshInstance3D" parent="."]
-position = Vector3(-1.56, 2.5, 4.3)
-mesh = SubResource("BoxMesh_6")
-material_override = ExtResource("3_armor_dark")
-
-[node name="ParapetL" type="MeshInstance3D" parent="."]
-position = Vector3(-1.4196000000000002, 3.75, 0.0)
-mesh = SubResource("BoxMesh_7")
-material_override = ExtResource("4_armor_plate")
-
-[node name="SkirtR" type="MeshInstance3D" parent="."]
-position = Vector3(1.56, 0.95, 0.0)
-mesh = SubResource("BoxMesh_8")
-material_override = ExtResource("4_armor_plate")
-
-[node name="SlatR0" type="MeshInstance3D" parent="."]
-position = Vector3(1.56, 2.5, -4.3)
-mesh = SubResource("BoxMesh_9")
-material_override = ExtResource("3_armor_dark")
-
-[node name="SlatR1" type="MeshInstance3D" parent="."]
-position = Vector3(1.56, 2.5, 0.0)
-mesh = SubResource("BoxMesh_10")
-material_override = ExtResource("3_armor_dark")
-
-[node name="SlatR2" type="MeshInstance3D" parent="."]
-position = Vector3(1.56, 2.5, 4.3)
-mesh = SubResource("BoxMesh_11")
-material_override = ExtResource("3_armor_dark")
-
-[node name="ParapetR" type="MeshInstance3D" parent="."]
-position = Vector3(1.4196000000000002, 3.75, 0.0)
-mesh = SubResource("BoxMesh_12")
-material_override = ExtResource("4_armor_plate")
-
-[node name="ParapetFront" type="MeshInstance3D" parent="."]
-position = Vector3(0.0, 3.75, -6.32)
-mesh = SubResource("BoxMesh_13")
-material_override = ExtResource("4_armor_plate")
-
-[node name="StripeFront" type="MeshInstance3D" parent="."]
-position = Vector3(0.0, 1.9, -6.42744)
-mesh = SubResource("BoxMesh_14")
-material_override = ExtResource("5_hazard_yello")
-
-[node name="CouplerFront" type="MeshInstance3D" parent="."]
-position = Vector3(0.0, 1.1, -6.952000000000001)
-mesh = SubResource("BoxMesh_15")
-material_override = ExtResource("3_armor_dark")
-
-[node name="ParapetRear" type="MeshInstance3D" parent="."]
-position = Vector3(0.0, 3.75, 6.32)
-mesh = SubResource("BoxMesh_16")
-material_override = ExtResource("4_armor_plate")
-
-[node name="StripeRear" type="MeshInstance3D" parent="."]
-position = Vector3(0.0, 1.9, 6.42744)
-mesh = SubResource("BoxMesh_17")
-material_override = ExtResource("5_hazard_yello")
-
-[node name="CouplerRear" type="MeshInstance3D" parent="."]
-position = Vector3(0.0, 1.1, 6.952000000000001)
-mesh = SubResource("BoxMesh_18")
-material_override = ExtResource("3_armor_dark")
-
 [node name="TurretRing" type="MeshInstance3D" parent="."]
 position = Vector3(0.0, 3.62, 0.0)
 mesh = SubResource("CylinderMesh_19")
-material_override = ExtResource("3_armor_dark")
+material_override = ExtResource("4_armor_dark")
 
 [node name="TurretCover" type="MeshInstance3D" parent="."]
 position = Vector3(0.0, 3.9, 0.0)
 mesh = SubResource("CylinderMesh_20")
-material_override = ExtResource("6_steel_worn")
+material_override = ExtResource("5_steel_worn")
 
 [node name="TurretMount" type="Marker3D" parent="."]
 position = Vector3(0.0, 3.96, 0.0)
-
-[node name="AmmoCrateA" type="MeshInstance3D" parent="."]
-position = Vector3(0.7, 3.7, -4.5)
-mesh = SubResource("BoxMesh_21")
-material_override = ExtResource("7_rust")
-
-[node name="AmmoCrateB" type="MeshInstance3D" parent="."]
-position = Vector3(-0.6, 3.65, 4.4)
-mesh = SubResource("BoxMesh_22")
-material_override = ExtResource("7_rust")
-
-[node name="Toolbox" type="MeshInstance3D" parent="."]
-position = Vector3(-0.7, 3.6, -4.6)
-mesh = SubResource("BoxMesh_23")
-material_override = ExtResource("3_armor_dark")
-
-[node name="TailLampL" type="MeshInstance3D" parent="."]
-position = Vector3(-1.2, 2.0, 6.42)
-mesh = SubResource("SphereMesh_24")
-material_override = ExtResource("8_lamp_red")
-
-[node name="TailLampR" type="MeshInstance3D" parent="."]
-position = Vector3(1.2, 2.0, 6.42)
-mesh = SubResource("SphereMesh_25")
-material_override = ExtResource("8_lamp_red")
 
 [node name="HullCollision" type="StaticBody3D" parent="."]
 collision_layer = 2

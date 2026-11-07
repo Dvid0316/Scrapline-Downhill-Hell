@@ -3,6 +3,20 @@
 All notable changes to this project. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.5.1] - 2026-11-06: Detailed train cars
+
+### Added
+- `CarKit` (`scripts/train/car_kit.gd`): a small procedural modelling kit with chamfered boxes, extruded armour profiles, cylinders, rivets, and chevron stripes. It merges each car into one mesh with a surface per material, so a detailed car costs only a few draw calls.
+- `CarBody`: procedural bodies for both cars.
+  - **Locomotive:** sloped armoured hood and cab, louvre grilles, radiator fans, exhaust stacks, walkway railings, a visored cab with windows, beacon, horn, and antenna, twin headlights, a spiked hazard-striped V plow, a fuel tank, steps, buffers, and a scrap plate welded on.
+  - **Gun car:** sloped hull, outward-leaning parapets with gun slits, hanging spaced-armour slats, an octagonal turret barbette, sandbag walls, ammo crates, jerry cans, a spare wheel, and end ladders.
+- `BogieModel`: cast side frames, axle boxes, coil springs, brake shoes, and flanged, ribbed wheelsets that **spin with the train's speed**.
+- `tools/train_preview.gd`: close-up beauty shots of the train from four angles.
+- `sandbag` and `lamp_amber` materials.
+
+### Changed
+- Train scenes are now just bogies, a `Body`, lights, smoke emitters, and collision. Collision shapes and the turret mount are unchanged. Loco smoke emitters moved onto the new stacks.
+
 ## [0.5.0] - 2026-11-06: Stylized graphics overhaul
 
 Art direction is now "stylized & punchy": bold saturated colours, chunky shapes,

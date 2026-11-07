@@ -17,7 +17,7 @@ extends Node3D
 
 @export_group("Grid")
 @export var margin: float = 140.0
-@export_range(1.0, 16.0) var cell_size: float = 4.0
+@export_range(1.0, 16.0) var cell_size: float = 3.0
 
 @export_group("Shape")
 @export var bed_half_width: float = 3.2
@@ -47,6 +47,7 @@ var _grid: PackedFloat32Array
 var _grid_nx: int = 0
 var _grid_nz: int = 0
 var _grid_min: Vector2
+var _grid_dist: PackedFloat32Array
 
 
 func _ready() -> void:
@@ -115,6 +116,31 @@ func sample_height(x: float, z: float) -> float:
 	return analytic_height(x, z)
 
 
+## Distance to the track centreline at world XZ, from the built grid
+## (nearest cell; cheap enough for scattering thousands of plants).
+func sample_track_distance(x: float, z: float) -> float:
+	if _grid_nx > 1:
+		var i := clampi(int(round((x - _grid_min.x) / cell_size)), 0, _grid_nx - 1)
+		var j := clampi(int(round((z - _grid_min.y) / cell_size)), 0, _grid_nz - 1)
+		return _grid_dist[j * _grid_nx + i]
+	return absf(track_relation(x, z).x)
+
+
+## Ground normal at world XZ from the height grid.
+func sample_normal(x: float, z: float) -> Vector3:
+	var e := cell_size
+	var hl := sample_height(x - e, z)
+	var hr := sample_height(x + e, z)
+	var hd := sample_height(x, z - e)
+	var hu := sample_height(x, z + e)
+	return Vector3(hl - hr, 2.0 * e, hd - hu).normalized()
+
+
+## World XZ rectangle covered by the terrain grid.
+func get_bounds() -> Rect2:
+	return Rect2(_grid_min, Vector2((_grid_nx - 1) * cell_size, (_grid_nz - 1) * cell_size))
+
+
 func analytic_height(x: float, z: float) -> float:
 	var rel := track_relation(x, z)
 	return _height_from_relation(x, z, rel)
@@ -162,6 +188,8 @@ func build() -> void:
 	heights.resize(nx * nz)
 	var dists := PackedFloat32Array()
 	dists.resize(nx * nz)
+	var sides := PackedByteArray()
+	sides.resize(nx * nz)
 	for j in nz:
 		for i in nx:
 			var x := min_v.x + i * cell_size
@@ -169,8 +197,10 @@ func build() -> void:
 			var rel := track_relation(x, z)
 			heights[j * nx + i] = _height_from_relation(x, z, rel)
 			dists[j * nx + i] = absf(rel.x)
+			sides[j * nx + i] = 1 if rel.x < 0.0 else 0
 
 	_grid = heights
+	_grid_dist = dists
 	_grid_nx = nx
 	_grid_nz = nz
 	_grid_min = min_v
@@ -188,7 +218,7 @@ func build() -> void:
 			var x := min_v.x + i * cell_size
 			var z := min_v.y + j * cell_size
 			st.set_normal(normal)
-			st.set_color(_color_for(normal, dists[idx], x, z))
+			st.set_color(_color_for(normal, dists[idx], x, z, sides[idx] == 1))
 			st.set_uv(Vector2(x, z) * 0.05)
 			st.add_vertex(to_local(Vector3(x, heights[idx], z)))
 	for j in nz - 1:
@@ -221,10 +251,10 @@ func build() -> void:
 		mi.add_child(body)
 
 
-func _color_for(normal: Vector3, dist: float, x: float, z: float) -> Color:
-	var steep := clampf((1.0 - normal.y) * 3.0, 0.0, 1.0)
-	var patch := _detail.get_noise_2d(x * 0.3, z * 0.3) * 0.5 + 0.5
-	var ground := dirt_color.lerp(scrub_color, patch)
-	var col := ground.lerp(rock_color, steep)
-	var near := 1.0 - smoothstep(bed_half_width, bed_half_width + 4.0, dist)
-	return col.lerp(gravel_color, near)
+## Vertex colour = blend masks for the terrain shader:
+## r = gravel (next to the track), g = shoulder dirt, b = mountain side.
+func _color_for(_normal: Vector3, dist: float, x: float, z: float, mountain: bool) -> Color:
+	var gravel := 1.0 - smoothstep(bed_half_width + 0.5, bed_half_width + 3.0, dist)
+	var wobble := _detail.get_noise_2d(x * 0.15, z * 0.15) * 2.5
+	var shoulder := 1.0 - smoothstep(bed_half_width + 4.0, bed_half_width + shoulder_width + 2.0 + wobble, dist)
+	return Color(gravel, shoulder, 1.0 if mountain else 0.0)

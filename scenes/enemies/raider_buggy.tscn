@@ -8,6 +8,7 @@
 [ext_resource type="Material" path="res://materials/glass_dark.tres" id="6"]
 [ext_resource type="Material" path="res://materials/target_red.tres" id="7"]
 [ext_resource type="Material" path="res://materials/lamp_headlight.tres" id="8"]
+[ext_resource type="Script" path="res://scripts/effects/puff_emitter.gd" id="puff_emitter"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_1"]
 size = Vector3(2.1, 0.45, 3.9)
@@ -300,3 +301,15 @@ sync_to_physics = false
 [node name="Shape0" type="CollisionShape3D" parent="Body"]
 position = Vector3(0.0, 1.15, 0.0)
 shape = SubResource("BoxShape3D_28")
+
+[node name="Dust" type="CPUParticles3D" parent="Intact"]
+position = Vector3(0, 0.15, 1.5)
+script = ExtResource("puff_emitter")
+preset = 1
+start_emitting = false
+
+[node name="WreckFire" type="CPUParticles3D" parent="Wreck"]
+position = Vector3(0, 0.9, 0)
+script = ExtResource("puff_emitter")
+preset = 2
+start_emitting = false

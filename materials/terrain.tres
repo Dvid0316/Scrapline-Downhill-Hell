@@ -1,22 +1,19 @@
-[gd_resource type="StandardMaterial3D" format=3]
+[gd_resource type="ShaderMaterial" format=3]
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_t"]
-frequency = 0.02
-fractal_octaves = 5
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_t"]
-width = 512
-height = 512
-seamless = true
-noise = SubResource("FastNoiseLite_t")
+[ext_resource type="Shader" path="res://shaders/stylized_terrain.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/sparse_grass/sparse_grass_diff.jpg" id="2_grass"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/sparse_grass/sparse_grass_nor_gl.jpg" id="3_grass_n"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/dry_ground_rocks/dry_ground_rocks_diff.jpg" id="4_dirt"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/dry_ground_rocks/dry_ground_rocks_nor_gl.jpg" id="5_dirt_n"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/rock_face/rock_face_diff.jpg" id="6_rock"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/gravel_floor/gravel_floor_diff.jpg" id="7_gravel"]
 
 [resource]
 resource_name = "terrain"
-vertex_color_use_as_albedo = true
-vertex_color_is_srgb = true
-albedo_color = Color(1.5, 1.5, 1.5, 1)
-albedo_texture = SubResource("NoiseTexture2D_t")
-roughness = 0.96
-uv1_scale = Vector3(0.08, 0.08, 0.08)
-uv1_triplanar = true
-uv1_world_triplanar = true
+shader = ExtResource("1_shader")
+shader_parameter/grass_tex = ExtResource("2_grass")
+shader_parameter/grass_nrm = ExtResource("3_grass_n")
+shader_parameter/dirt_tex = ExtResource("4_dirt")
+shader_parameter/dirt_nrm = ExtResource("5_dirt_n")
+shader_parameter/rock_tex = ExtResource("6_rock")
+shader_parameter/gravel_tex = ExtResource("7_gravel")

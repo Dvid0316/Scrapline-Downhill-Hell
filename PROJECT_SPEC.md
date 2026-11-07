@@ -23,7 +23,7 @@ visuals, and replayability.
 - Godot 4.7, GDScript, Forward+ renderer
 - Developed on CachyOS Linux
 - Performance target (future, **not yet verified**): 1920×1080 at 60 FPS
-- No third-party dependencies. Original primitive/procedural assets only.
+- No third-party code dependencies. Geometry is original primitive/procedural work. CC0 textures (Poly Haven) are allowed and listed in `CREDITS.md`.
 
 ## Architecture (as of Milestone 1)
 

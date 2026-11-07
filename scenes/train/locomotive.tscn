@@ -8,6 +8,7 @@
 [ext_resource type="Material" path="res://materials/steel_worn.tres" id="6_steel_worn"]
 [ext_resource type="Material" path="res://materials/hazard_yellow.tres" id="7_hazard_yello"]
 [ext_resource type="Material" path="res://materials/lamp_headlight.tres" id="8_lamp_headlig"]
+[ext_resource type="Script" path="res://scripts/effects/puff_emitter.gd" id="puff_emitter"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_1"]
 size = Vector3(3.0, 0.5, 16.6)
@@ -260,3 +261,15 @@ shape = SubResource("BoxShape3D_26")
 [node name="Shape1" type="CollisionShape3D" parent="HullCollision"]
 position = Vector3(0.0, 3.9, -4.2)
 shape = SubResource("BoxShape3D_27")
+
+[node name="SmokeA" type="CPUParticles3D" parent="."]
+position = Vector3(0.45, 4.6, 4.9)
+script = ExtResource("puff_emitter")
+preset = 0
+start_emitting = true
+
+[node name="SmokeB" type="CPUParticles3D" parent="."]
+position = Vector3(-0.45, 4.6, 4.9)
+script = ExtResource("puff_emitter")
+preset = 0
+start_emitting = true

@@ -9,6 +9,7 @@
 [ext_resource type="Material" path="res://materials/hazard_yellow.tres" id="7"]
 [ext_resource type="Material" path="res://materials/lamp_headlight.tres" id="8"]
 [ext_resource type="Material" path="res://materials/steel_worn.tres" id="9"]
+[ext_resource type="Script" path="res://scripts/effects/puff_emitter.gd" id="puff_emitter"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_1"]
 size = Vector3(2.6, 0.5, 6.4)
@@ -371,3 +372,15 @@ sync_to_physics = false
 [node name="Shape0" type="CollisionShape3D" parent="Body"]
 position = Vector3(0.0, 1.6, 0.0)
 shape = SubResource("BoxShape3D_33")
+
+[node name="Dust" type="CPUParticles3D" parent="Intact"]
+position = Vector3(0, 0.15, 1.3)
+script = ExtResource("puff_emitter")
+preset = 1
+start_emitting = false
+
+[node name="WreckFire" type="CPUParticles3D" parent="Wreck"]
+position = Vector3(0, 1.2, 0)
+script = ExtResource("puff_emitter")
+preset = 2
+start_emitting = false

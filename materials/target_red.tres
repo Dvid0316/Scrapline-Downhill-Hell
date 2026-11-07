@@ -2,7 +2,7 @@
 
 [resource]
 resource_name = "target_red"
-albedo_color = Color(0.85, 0.12, 0.06, 1)
+albedo_color = Color(0.95, 0.14, 0.06, 1)
 roughness = 0.5
 emission_enabled = true
 emission = Color(0.9, 0.12, 0.04, 1)

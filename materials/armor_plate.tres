@@ -1,8 +1,21 @@
-[gd_resource type="StandardMaterial3D" format=3]
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/stylized_surface.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/rust_coarse_01/rust_coarse_01_diff.jpg" id="2_grunge"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/rusty_painted_metal/rusty_painted_metal_diff.jpg" id="3_rust"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/rust_coarse_01/rust_coarse_01_nor_gl.jpg" id="4_nrm"]
 
 [resource]
 resource_name = "armor_plate"
-albedo_color = Color(0.30, 0.28, 0.23, 1)
-metallic = 0.55
-roughness = 0.72
-
+shader = ExtResource("1_shader")
+shader_parameter/base_color = Color(0.34, 0.4, 0.19, 1)
+shader_parameter/metallic = 0.35
+shader_parameter/roughness = 0.55
+shader_parameter/grunge_strength = 0.4
+shader_parameter/rust_amount = 0.2
+shader_parameter/tex_scale = 0.4
+shader_parameter/normal_strength = 0.7
+shader_parameter/rim_strength = 0.35
+shader_parameter/grunge_tex = ExtResource("2_grunge")
+shader_parameter/rust_tex = ExtResource("3_rust")
+shader_parameter/detail_nrm = ExtResource("4_nrm")

@@ -1,35 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Material" path="res://materials/rock_grey.tres" id="1_rock_grey"]
-[ext_resource type="Material" path="res://materials/rock_dark.tres" id="2_rock_dark"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_1"]
-size = Vector3(2.2, 1.6, 1.8)
-
-[sub_resource type="BoxMesh" id="BoxMesh_2"]
-size = Vector3(1.6, 1.2, 1.5)
-
-[sub_resource type="SphereMesh" id="SphereMesh_3"]
-radius = 1.0
-height = 1.4
-radial_segments = 7
-rings = 4
+[ext_resource type="Script" path="res://scripts/environment/proc_rock.gd" id="1_proc_rock"]
 
 [node name="Rock" type="Node3D"]
-
-[node name="ChunkA" type="MeshInstance3D" parent="."]
-position = Vector3(0.0, 0.5, 0.0)
-rotation_degrees = Vector3(12.0, 25.0, 8.0)
-mesh = SubResource("BoxMesh_1")
-material_override = ExtResource("1_rock_grey")
-
-[node name="ChunkB" type="MeshInstance3D" parent="."]
-position = Vector3(0.7, 0.4, 0.4)
-rotation_degrees = Vector3(-10.0, 60.0, 18.0)
-mesh = SubResource("BoxMesh_2")
-material_override = ExtResource("2_rock_dark")
-
-[node name="ChunkC" type="MeshInstance3D" parent="."]
-position = Vector3(-0.6, 0.3, -0.3)
-mesh = SubResource("SphereMesh_3")
-material_override = ExtResource("1_rock_grey")
+script = ExtResource("1_proc_rock")

@@ -1,8 +1,21 @@
-[gd_resource type="StandardMaterial3D" format=3]
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/stylized_surface.gdshader" id="1_shader"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/rust_coarse_01/rust_coarse_01_diff.jpg" id="2_grunge"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/rusty_painted_metal/rusty_painted_metal_diff.jpg" id="3_rust"]
+[ext_resource type="Texture2D" path="res://assets/textures/polyhaven/rust_coarse_01/rust_coarse_01_nor_gl.jpg" id="4_nrm"]
 
 [resource]
 resource_name = "rail_steel"
-albedo_color = Color(0.46, 0.44, 0.42, 1)
-metallic = 0.9
-roughness = 0.38
-
+shader = ExtResource("1_shader")
+shader_parameter/base_color = Color(0.6, 0.58, 0.56, 1)
+shader_parameter/metallic = 0.85
+shader_parameter/roughness = 0.35
+shader_parameter/grunge_strength = 0.25
+shader_parameter/rust_amount = 0.15
+shader_parameter/tex_scale = 0.8
+shader_parameter/normal_strength = 0.4
+shader_parameter/rim_strength = 0.2
+shader_parameter/grunge_tex = ExtResource("2_grunge")
+shader_parameter/rust_tex = ExtResource("3_rust")
+shader_parameter/detail_nrm = ExtResource("4_nrm")

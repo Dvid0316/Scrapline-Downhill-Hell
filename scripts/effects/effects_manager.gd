@@ -28,7 +28,6 @@ const HOSTILE_TRACER_MAT := preload("res://materials/fx_tracer_hostile.tres")
 const DEBRIS_MAT := preload("res://materials/fx_debris.tres")
 const DUST_MAT := preload("res://materials/fx_dust.tres")
 const SPLINTER_MAT := preload("res://materials/sleeper_wood.tres")
-const SMOKE_MAT := preload("res://materials/fx_smoke.tres")
 
 # Tracer slot arrays (parallel, no per-shot allocation).
 var _tracers: Array[MeshInstance3D] = []
@@ -53,6 +52,7 @@ class Blast:
 	var fire: CPUParticles3D
 	var debris: CPUParticles3D
 	var smoke: CPUParticles3D
+	var puffs: CPUParticles3D
 	var age: float = 99.0
 	var radius: float = 1.0
 
@@ -177,9 +177,18 @@ func spawn_explosion(center: Vector3, size: float = 1.0, fireball: bool = true) 
 	b.debris.scale_amount_max = 1.6 * size
 	b.debris.initial_velocity_max = 9.0 + 5.0 * size
 	b.debris.restart()
+	b.puffs.scale_amount_min = 0.9 * size
+	b.puffs.scale_amount_max = 1.8 * size
+	b.puffs.initial_velocity_min = 1.5 * size
+	b.puffs.initial_velocity_max = 5.5 * size
+	b.puffs.emission_sphere_radius = 0.6 * size
+	b.smoke.scale_amount_min = 0.9 * size
+	b.smoke.scale_amount_max = 1.9 * size
+	b.smoke.emission_sphere_radius = 0.8 * size
 	if fireball:
 		b.fire.restart()
-		b.smoke.restart()
+		b.puffs.restart()
+	b.smoke.restart()
 	_update_blast(b, 0.0)
 
 
@@ -193,7 +202,7 @@ func _update_blast(b: Blast, delta: float) -> void:
 			b.age = 99.0
 		return
 	var grow := 1.0 - pow(1.0 - t, 3.0)
-	var r := b.radius * (0.35 + 0.65 * grow)
+	var r := b.radius * (0.3 + 0.45 * grow)
 	b.ball.scale = Vector3(r, r * 0.85, r)
 	var a := (1.0 - t) * (1.0 - t)
 	b.ball_mat.albedo_color.a = a
@@ -219,7 +228,7 @@ func _make_blast(i: int) -> Blast:
 	b.ball_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	b.ball_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	b.ball_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	b.ball_mat.albedo_color = Color(1.0, 0.55, 0.15, 1.0)
+	b.ball_mat.albedo_color = Color(1.0, 0.85, 0.5, 1.0)
 	b.ball_mat.emission_enabled = true
 	b.ball_mat.emission = Color(1.0, 0.45, 0.1)
 	b.ball.material_override = b.ball_mat
@@ -231,12 +240,37 @@ func _make_blast(i: int) -> Blast:
 	b.light.light_energy = 0.0
 	b.light.shadow_enabled = false
 	b.root.add_child(b.light)
-	b.fire = _make_burst("Fire", SPARK_MAT, _small_box(0.12), 26, 0.55, Vector2(6, 15), 9.0, 80.0)
+	b.fire = _make_burst("Fire", SPARK_MAT, _small_box(0.12), 18, 0.55, Vector2(8, 18), 9.0, 80.0)
 	b.debris = _make_burst("Debris", DEBRIS_MAT, _small_box(0.25), 16, 1.3, Vector2(5, 12), 18.0, 70.0)
-	b.smoke = _make_burst("Smoke", SMOKE_MAT, _small_sphere(0.9), 10, 2.2, Vector2(1, 3.5), -1.5, 60.0)
-	b.smoke.scale_amount_min = 1.0
-	b.smoke.scale_amount_max = 2.6
-	for p: CPUParticles3D in [b.fire, b.debris, b.smoke]:
+	# Chunky toon fireball: hot puffs burst out, cool through orange to soot.
+	b.puffs = PuffFx.make("Fireball", PuffFx.fire_ramp(), 16, 1.1, Vector2(0.9, 1.8))
+	b.puffs.one_shot = true
+	b.puffs.emitting = false
+	b.puffs.explosiveness = 1.0
+	b.puffs.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	b.puffs.spread = 180.0
+	b.puffs.gravity = Vector3(0, 2.5, 0)
+	b.puffs.damping_min = 4.0
+	b.puffs.damping_max = 7.0
+	b.puffs.scale_amount_curve = PuffFx.grow_curve(0.1)
+	add_child(b.puffs)
+	# Lingering soot column.
+	b.smoke = PuffFx.make("Smoke", PuffFx.ramp([
+			[0.0, Color(0.3, 0.2, 0.15, 0.25)], [0.25, Color(0.24, 0.22, 0.22, 0.0)],
+			[1.0, Color(0.42, 0.4, 0.4, 0.0)]]), 10, 2.6, Vector2(0.9, 1.9))
+	b.smoke.one_shot = true
+	b.smoke.emitting = false
+	b.smoke.explosiveness = 0.75
+	b.smoke.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	b.smoke.spread = 25.0
+	b.smoke.initial_velocity_min = 1.5
+	b.smoke.initial_velocity_max = 4.0
+	b.smoke.gravity = Vector3(0, 1.2, 0)
+	b.smoke.damping_min = 0.5
+	b.smoke.damping_max = 1.5
+	b.smoke.scale_amount_curve = PuffFx.grow_curve(0.3)
+	add_child(b.smoke)
+	for p: CPUParticles3D in [b.fire, b.debris, b.smoke, b.puffs]:
 		remove_child(p)
 		p.top_level = false
 		b.root.add_child(p)

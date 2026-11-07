@@ -1,6 +1,14 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/camera/follow_camera.gd" id="1_follow_camer"]
+[ext_resource type="Shader" path="res://shaders/outline_post.gdshader" id="2_outline"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_outline"]
+render_priority = -100
+shader = ExtResource("2_outline")
+
+[sub_resource type="QuadMesh" id="QuadMesh_outline"]
+size = Vector2(2, 2)
 
 [node name="FollowCamera" type="Camera3D"]
 script = ExtResource("1_follow_camer")
@@ -8,3 +16,10 @@ fov = 50.0
 near = 0.3
 far = 1500.0
 current = true
+
+[node name="Outlines" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0, -1)
+extra_cull_margin = 16384.0
+cast_shadow = 0
+mesh = SubResource("QuadMesh_outline")
+material_override = SubResource("ShaderMaterial_outline")

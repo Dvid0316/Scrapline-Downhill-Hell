@@ -34,36 +34,46 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/gun_truck.tscn" id="32_gun_truck"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/strafe_drone.tscn" id="33_strafe_dron"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/kamikaze_drone.tscn" id="34_kamikaze_dr"]
+[ext_resource type="Shader" path="res://shaders/stylized_sky.gdshader" id="35_sky_shader"]
+[ext_resource type="Script" path="res://scripts/environment/vegetation_scatter.gd" id="36_vegetation"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
-sky_top_color = Color(0.3, 0.38, 0.48, 1.0)
-sky_horizon_color = Color(0.7, 0.66, 0.6, 1.0)
-ground_bottom_color = Color(0.18, 0.16, 0.14, 1.0)
-ground_horizon_color = Color(0.62, 0.58, 0.52, 1.0)
-sun_angle_max = 20.0
+[sub_resource type="ShaderMaterial" id="SkyMaterial_1"]
+shader = ExtResource("35_sky_shader")
 
 [sub_resource type="Sky" id="Sky_2"]
-sky_material = SubResource("ProceduralSkyMaterial_1")
+sky_material = SubResource("SkyMaterial_1")
+radiance_size = 2
 
 [sub_resource type="Environment" id="Environment_3"]
 background_mode = 2
 sky = SubResource("Sky_2")
 ambient_light_source = 3
 ambient_light_energy = 0.7
+reflected_light_source = 2
 tonemap_mode = 3
-tonemap_exposure = 1.05
+tonemap_exposure = 1.0
+tonemap_white = 6.0
 ssao_enabled = true
-ssao_radius = 2.0
+ssao_radius = 1.6
+ssao_intensity = 2.2
+ssao_power = 1.4
+ssil_enabled = true
+ssil_intensity = 0.8
 glow_enabled = true
-glow_intensity = 0.35
-glow_bloom = 0.05
+glow_intensity = 0.55
+glow_strength = 1.05
+glow_bloom = 0.04
+glow_hdr_threshold = 1.1
 fog_enabled = true
-fog_light_color = Color(0.66, 0.63, 0.58, 1.0)
-fog_density = 0.0022
-fog_sky_affect = 0.35
+fog_light_color = Color(0.6, 0.74, 0.9, 1.0)
+fog_light_energy = 1.0
+fog_sun_scatter = 0.25
+fog_density = 0.0009
+fog_aerial_perspective = 0.2
+fog_sky_affect = 0.0
 adjustment_enabled = true
-adjustment_contrast = 1.08
-adjustment_saturation = 0.88
+adjustment_contrast = 1.1
+adjustment_saturation = 1.15
 
 [node name="Main" type="Node3D" node_paths=PackedStringArray("train", "camera", "hud", "target_course", "score", "weapon", "turret_input", "combat_hud", "hull", "director", "feedback", "cannon")]
 script = ExtResource("1_main")
@@ -84,10 +94,11 @@ cannon = NodePath("Combat/Cannon")
 environment = SubResource("Environment_3")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
-rotation_degrees = Vector3(-38.0, 35.0, 0.0)
-light_color = Color(1.0, 0.93, 0.82, 1.0)
-light_energy = 1.3
+rotation_degrees = Vector3(-34.0, 40.0, 0.0)
+light_color = Color(1.0, 0.9, 0.74, 1.0)
+light_energy = 1.75
 shadow_enabled = true
+shadow_blur = 1.5
 directional_shadow_max_distance = 220.0
 
 [node name="Track" parent="." instance=ExtResource("2_track")]
@@ -96,6 +107,10 @@ directional_shadow_max_distance = 220.0
 script = ExtResource("3_terrain_buil")
 route = NodePath("../Track")
 material = ExtResource("4_terrain")
+
+[node name="Vegetation" type="Node3D" parent="." node_paths=PackedStringArray("terrain")]
+script = ExtResource("36_vegetation")
+terrain = NodePath("../Terrain")
 
 [node name="Props" type="Node3D" parent="."]
 

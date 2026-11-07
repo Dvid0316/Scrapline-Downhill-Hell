@@ -3,6 +3,26 @@
 All notable changes to this project. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.5.0] - 2026-11-06: Stylized graphics overhaul
+
+Art direction is now "stylized & punchy": bold saturated colours, chunky shapes,
+readable silhouettes, and juicy effects.
+
+### Added
+- **Sky and lighting:** gradient sky shader with sun glow and cartoon clouds, ACES tonemapping, SSAO/SSIL, glow, aerial perspective, and a warmer, stronger sun.
+- **Terrain shader** (`stylized_terrain.gdshader`): grass, dirt shoulder, gravel, and triplanar rock cliffs with strata bands. CC0 textures are remapped onto a hand-picked palette.
+- **Procedural rocks** (`RockMeshes`, `ProcRock`): faceted low-poly boulders and cliff spires with a grassy cap.
+- **Vegetation** (`VegetationScatter`): MultiMesh pines, bushes, and about 100k grass tufts, with wind sway.
+- **Painted-metal material** (`stylized_surface.gdshader`): punchy paint with grunge, rust streaks, detail normals, and rim light. Applied to the train, enemies, and props.
+- **Outline post-process** on the camera (depth and normal edges, fading out with distance). Grass opts out.
+- **Toon FX** (`PuffFx`, `PuffEmitter`, `stylized_puff.gdshader`): chunky fireballs that cool from white-hot through orange to soot, lingering smoke columns, locomotive exhaust, raider dust trails, and burning wrecks.
+- `CREDITS.md` for the Poly Haven CC0 textures.
+
+### Changed
+- The debug HUD is hidden by default (F1 toggles it).
+- Terrain cell size 3 m, with vertex-colour masks for the shader.
+- Measured cost: about 3.8 ms of GPU per frame at 1080p in combat (was about 1.9 ms).
+
 ## [0.4.0] - 2026-11-06: Heavy cannon
 
 ### Added

@@ -1,54 +1,7 @@
 [gd_scene format=3]
 
-[ext_resource type="Material" path="res://materials/rock_dark.tres" id="1_rock_dark"]
-[ext_resource type="Material" path="res://materials/rock_grey.tres" id="2_rock_grey"]
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
-top_radius = 1.4
-bottom_radius = 2.6
-height = 16.0
-radial_segments = 6
-rings = 1
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
-top_radius = 1.2
-bottom_radius = 2.2
-height = 11.0
-radial_segments = 6
-rings = 1
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
-top_radius = 1.0
-bottom_radius = 1.8
-height = 8.0
-radial_segments = 6
-rings = 1
-
-[sub_resource type="BoxMesh" id="BoxMesh_4"]
-size = Vector3(3.0, 1.4, 2.4)
+[ext_resource type="Script" path="res://scripts/environment/proc_rock.gd" id="1_proc_rock"]
 
 [node name="CliffSpires" type="Node3D"]
-
-[node name="SpireA" type="MeshInstance3D" parent="."]
-position = Vector3(0.0, 6.0, 0.0)
-rotation_degrees = Vector3(3.0, 0.0, 4.0)
-mesh = SubResource("CylinderMesh_1")
-material_override = ExtResource("1_rock_dark")
-
-[node name="SpireB" type="MeshInstance3D" parent="."]
-position = Vector3(2.8, 4.0, 1.2)
-rotation_degrees = Vector3(-4.0, 20.0, 2.0)
-mesh = SubResource("CylinderMesh_2")
-material_override = ExtResource("2_rock_grey")
-
-[node name="SpireC" type="MeshInstance3D" parent="."]
-position = Vector3(-2.4, 3.0, 1.6)
-rotation_degrees = Vector3(5.0, 40.0, -6.0)
-mesh = SubResource("CylinderMesh_3")
-material_override = ExtResource("1_rock_dark")
-
-[node name="Rubble" type="MeshInstance3D" parent="."]
-position = Vector3(0.8, 0.3, 3.0)
-rotation_degrees = Vector3(8.0, 30.0, 6.0)
-mesh = SubResource("BoxMesh_4")
-material_override = ExtResource("2_rock_grey")
+script = ExtResource("1_proc_rock")
+kind = 1

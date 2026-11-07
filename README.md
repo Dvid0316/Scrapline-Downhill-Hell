@@ -13,8 +13,10 @@ still there for bonus points.
 ## Requirements
 
 - Godot **4.7** (standard build, not .NET). On CachyOS/Arch: `sudo pacman -S godot`
-- No third-party addons or downloaded assets. All geometry is primitive or
-  procedural, and all sounds are synthesized by `tools/gen_sfx.py`.
+- No third-party addons. The only downloaded assets are a few CC0 Poly Haven
+  textures (see `CREDITS.md`), which are recoloured by the stylized shaders. All
+  geometry is primitive or procedural, and all sounds are synthesized by
+  `tools/gen_sfx.py`.
 
 ## Launch
 

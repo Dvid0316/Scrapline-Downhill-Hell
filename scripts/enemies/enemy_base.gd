@@ -82,6 +82,8 @@ var _burst_left: int = 0
 var _shot_cd: float = 0.0
 var _burst_cd: float = 0.0
 var _query := PhysicsRayQueryParameters3D.new()
+var _dust: CPUParticles3D
+var _wreck_fire: CPUParticles3D
 
 
 func _ready() -> void:
@@ -92,6 +94,8 @@ func _ready() -> void:
 	_body = get_node_or_null(^"Body")
 	_muzzle = find_child("Muzzle", true, false) as Node3D
 	_gun = find_child("Gun", true, false) as Node3D
+	_dust = find_child("Dust", true, false) as CPUParticles3D
+	_wreck_fire = find_child("WreckFire", true, false) as CPUParticles3D
 	if _intact:
 		for n in _intact.find_children("*", "GeometryInstance3D", true, false):
 			_meshes.append(n)
@@ -124,6 +128,8 @@ func spawn(p_train: TrainController, p_route: RailRoute, p_terrain: TerrainBuild
 	_shot_cd = 0.0
 	_burst_cd = rng.randf_range(burst_pause.x, burst_pause.y) * 0.7
 	_on_spawn()
+	if _dust:
+		_dust.emitting = true
 	_place(0.0)
 	set_physics_process(true)
 
@@ -142,6 +148,7 @@ func _set_inactive() -> void:
 	visible = false
 	if _body:
 		_body.collision_layer = 0
+	_set_emitting(false, false)
 	set_physics_process(false)
 	set_process(false)
 
@@ -334,6 +341,7 @@ func _on_destroyed(_source: Node) -> void:
 	else:
 		_set_overlay(SCORCH_MATERIAL)
 	_wreck_left = wreck_time
+	_set_emitting(false, true)
 	_on_wrecked()
 
 
@@ -344,6 +352,16 @@ func _on_reset() -> void:
 		_intact.visible = true
 	if _wreck:
 		_wreck.visible = false
+
+
+func _set_emitting(dust: bool, fire: bool) -> void:
+	if _dust:
+		_dust.emitting = dust
+	if _wreck_fire:
+		_wreck_fire.emitting = fire
+		if not fire:
+			_wreck_fire.restart()  # clear leftover puffs before the pool reuses it
+			_wreck_fire.emitting = false
 
 
 func _set_overlay(mat: Material) -> void:

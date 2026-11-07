@@ -3,6 +3,19 @@
 All notable changes to this project. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.4.0] - 2026-11-06: Heavy cannon
+
+### Added
+- **Heavy cannon** on the right mouse button (or `E`), mounted beside the MG on the same turret, so both aim together and can fire at once. 2 shells per second, 40 direct damage plus an explosive burst (up to 45 damage, 5.5 m radius, falloff toward the edge). The direct target doesn't also take the splash. Range 360 m.
+- Cannon barrel, breech, and muzzle brake on the turret, with its own big recoil, muzzle flash, and light.
+- Fat, short shell tracers. An explosion and sound where every shell lands. A synthesized `cannon_shot.wav` (deep boom).
+- Crosshair reload ring (fills while loading, four ticks when ready). HUD hits and accuracy include cannon shells.
+- `HitscanWeapon` gains `muzzle_slot`, `splash_radius`, `splash_damage`, a `splashed` signal, and `get_ready_ratio()`. `MountedTurret` muzzle, direction, and FX calls take a slot (`&"mg"` / `&"cannon"`).
+- `tests/test_cannon.gd` (24 checks).
+
+### Changed
+- Explosion effect pool 5 → 8 and explosion voices 3 → 4, to make room for shell bursts.
+
 ## [0.3.0] - 2026-11-06: Milestone 3: Enemies and Waves
 
 ### Added

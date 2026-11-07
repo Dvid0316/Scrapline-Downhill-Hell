@@ -19,6 +19,7 @@ extends Node3D
 @export var wood_impact_stream: AudioStream = preload("res://audio/sfx/impact_wood.wav")
 @export var explosion_stream: AudioStream = preload("res://audio/sfx/explosion.wav")
 @export var break_stream: AudioStream = preload("res://audio/sfx/crate_break.wav")
+@export var cannon_stream: AudioStream = preload("res://audio/sfx/cannon_shot.wav")
 @export var enemy_gun_stream: AudioStream = preload("res://audio/sfx/enemy_shot.wav")
 @export var wave_horn_stream: AudioStream = preload("res://audio/sfx/wave_horn.wav")
 @export var wave_clear_stream: AudioStream = preload("res://audio/sfx/wave_clear.wav")
@@ -29,6 +30,7 @@ extends Node3D
 @export_range(-40.0, 12.0) var impact_volume_db: float = -11.0
 @export_range(-40.0, 12.0) var explosion_volume_db: float = -2.0
 @export_range(-40.0, 12.0) var enemy_gun_volume_db: float = -8.0
+@export_range(-40.0, 12.0) var cannon_volume_db: float = -3.0
 @export_range(-40.0, 12.0) var cue_volume_db: float = -6.0
 
 @export_group("Limits")
@@ -36,7 +38,7 @@ extends Node3D
 @export_range(1, 16) var impact_voices: int = 5
 ## Minimum seconds between impact sounds (rapid fire would otherwise spam).
 @export var impact_min_interval: float = 0.07
-@export_range(1, 8) var explosion_voices: int = 3
+@export_range(1, 8) var explosion_voices: int = 4
 @export_range(1, 12) var enemy_gun_voices: int = 4
 ## Minimum seconds between enemy gunshots (several enemies firing at once).
 @export var enemy_gun_min_interval: float = 0.035
@@ -51,9 +53,10 @@ var _enemy_guns: Array[AudioStreamPlayer3D] = []
 var _enemy_gun_next := 0
 var _last_enemy_gun_time := -1.0
 var _cue: AudioStreamPlayer
+var _cannon: AudioStreamPlayer
 var _warning: AudioStreamPlayer3D
 ## Requests per category (for tests/debug). Counted even when muted.
-var requested := {&"shot": 0, &"impact": 0, &"explosion": 0, &"enemy_shot": 0, &"cue": 0, &"warning": 0}
+var requested := {&"shot": 0, &"impact": 0, &"explosion": 0, &"enemy_shot": 0, &"cue": 0, &"warning": 0, &"cannon": 0}
 ## Headless runs (CI/tests) have a dummy audio driver that never mixes, so
 ## playbacks would pile up unreleased. Count the requests but don't play.
 var _silent := false
@@ -84,6 +87,13 @@ func _ready() -> void:
 		var p := _make_3d("EnemyGun%d" % i, &"Weapons", enemy_gun_volume_db, 30.0)
 		p.stream = enemy_gun
 		_enemy_guns.append(p)
+	_cannon = AudioStreamPlayer.new()
+	_cannon.name = "Cannon"
+	_cannon.stream = _randomized(cannon_stream, 1.06, 1.5)
+	_cannon.max_polyphony = 2
+	_cannon.volume_db = cannon_volume_db
+	_cannon.bus = _bus_or_master(&"Weapons")
+	add_child(_cannon)
 	_cue = AudioStreamPlayer.new()
 	_cue.name = "Cue"
 	_cue.volume_db = cue_volume_db
@@ -110,6 +120,8 @@ func stop_all() -> void:
 		p.stop()
 	if _cue:
 		_cue.stop()
+	if _cannon:
+		_cannon.stop()
 	if _warning:
 		_warning.stop()
 
@@ -155,6 +167,14 @@ func play_explosion(point: Vector3, big: bool = true) -> void:
 	p.pitch_scale = randf_range(0.9, 1.08)
 	p.global_position = point
 	p.play()
+
+
+func play_cannon() -> void:
+	requested[&"cannon"] += 1
+	if _silent:
+		return
+	_cannon.volume_db = cannon_volume_db
+	_cannon.play()
 
 
 ## Enemy gunfire, positional and rate-limited.

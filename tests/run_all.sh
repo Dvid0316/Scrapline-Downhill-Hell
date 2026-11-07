@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run every headless check: import/parse, then the Milestone 1, 2 and 3 suites.
+# Run every headless check: import/parse, then the Milestone 1, 2, 3 and cannon suites.
 # Usage: tests/run_all.sh     (from the project root or anywhere)
 set -u
 cd "$(dirname "$0")/.."
@@ -13,7 +13,7 @@ else
   echo "   clean"
 fi
 
-for t in tests/test_milestone1.gd tests/test_milestone2.gd tests/test_milestone3.gd; do
+for t in tests/test_milestone1.gd tests/test_milestone2.gd tests/test_milestone3.gd tests/test_cannon.gd; do
   echo "== $t"
   "$GODOT" --headless --path . --fixed-fps 60 -s "res://$t" 2>&1 | grep -E "PASS|FAIL|tests:|leaked|still in use"
   code=${PIPESTATUS[0]}

@@ -13,8 +13,12 @@ extends Node
 
 signal shot_fired(origin: Vector3, direction: Vector3, end_point: Vector3, is_tracer: bool)
 signal shot_impact(point: Vector3, normal: Vector3, surface: StringName, target: Node, killed: bool)
+## Explosive rounds only: the round burst at [param point].
+signal splashed(point: Vector3, radius: float)
 
 @export var turret: MountedTurret
+## Which of the turret's barrels this gun fires from: &"mg" or &"cannon".
+@export var muzzle_slot: StringName = &"mg"
 
 @export_group("Ballistics")
 @export_range(1.0, 40.0) var fire_rate: float = 11.0  ## rounds per second
@@ -24,6 +28,13 @@ signal shot_impact(point: Vector3, normal: Vector3, surface: StringName, target:
 ## Every Nth round is a visible tracer (1 = all).
 @export_range(1, 10) var tracer_every: int = 2
 @export_flags_3d_physics var collision_mask: int = PhysicsLayers.PLAYER_SHOT_MASK
+
+@export_group("Explosive rounds")
+## 0 = ordinary bullets. Above 0, every round that hits something bursts and
+## damages all Damageables in this radius (falling off toward the edge).
+## The thing it hit directly takes [member damage] only, not the splash too.
+@export var splash_radius: float = 0.0
+@export var splash_damage: float = 0.0
 
 ## Set by whoever controls the gun.
 var trigger_held: bool = false
@@ -64,8 +75,8 @@ func step(delta: float) -> void:
 func fire_one() -> Node:
 	if turret == null:
 		return null
-	var origin := turret.get_muzzle_transform().origin
-	var dir := _apply_spread(turret.get_barrel_direction())
+	var origin := turret.get_muzzle_transform(muzzle_slot).origin
+	var dir := _apply_spread(turret.get_barrel_direction(muzzle_slot))
 	return fire_ray(origin, dir)
 
 
@@ -95,8 +106,16 @@ func fire_ray(origin: Vector3, dir: Vector3) -> Node:
 		if &"surface" in target:
 			surface = target.surface
 		killed = target.apply_damage(damage, point, normal, self)
+	if splash_radius > 0.0 and is_inside_tree():
+		Damageable.damage_area(get_tree(), point, splash_radius, splash_damage, self, target)
+		splashed.emit(point, splash_radius)
 	shot_impact.emit(point, normal, surface, target, killed)
 	return target
+
+
+## 1 = ready to fire, 0 = just fired (for a reload indicator).
+func get_ready_ratio() -> float:
+	return 1.0 - clampf(_cooldown * fire_rate, 0.0, 1.0)
 
 
 func reset_stats() -> void:

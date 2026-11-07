@@ -19,10 +19,12 @@ const KEYS := {
 	"cam_reset": [KEY_HOME],
 	"release_mouse": [KEY_ESCAPE],
 	"fire": [],
+	"fire_cannon": [KEY_E],
 }
 
 const MOUSE := {
 	"fire": [MOUSE_BUTTON_LEFT],
+	"fire_cannon": [MOUSE_BUTTON_RIGHT],
 	"cam_zoom_in": [MOUSE_BUTTON_WHEEL_UP],
 	"cam_zoom_out": [MOUSE_BUTTON_WHEEL_DOWN],
 }

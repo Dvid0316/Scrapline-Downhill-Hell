@@ -11,6 +11,7 @@ extends CanvasLayer
 @export var camera: Camera3D
 @export var score: ScoreTracker
 @export var weapon: HitscanWeapon
+@export var cannon: HitscanWeapon
 @export var turret_input: TurretInput
 @export var hull: TrainHull
 @export var director: WaveDirector
@@ -59,6 +60,7 @@ func _ready() -> void:
 	crosshair.name = "Crosshair"
 	crosshair.aim_provider = _aim_position
 	crosshair.gun_provider = _gun_position
+	crosshair.cannon_provider = _cannon_ready
 	add_child(crosshair)
 
 	var panel := PanelContainer.new()
@@ -199,8 +201,8 @@ func _refresh() -> void:
 	var sc := score.score if score else 0
 	var kills := score.destroyed if score else 0
 	_score_label.text = "%d" % sc
-	var hits := weapon.shots_hit if weapon else 0
-	var shots := weapon.shots_fired if weapon else 0
+	var hits := (weapon.shots_hit if weapon else 0) + (cannon.shots_hit if cannon else 0)
+	var shots := (weapon.shots_fired if weapon else 0) + (cannon.shots_fired if cannon else 0)
 	var acc := (100.0 * hits / shots) if shots > 0 else 0.0
 	var enemy_kills := score.enemy_kills if score else 0
 	_detail_label.text = "ENEMIES %d   TARGETS %d / %d\nHITS %d   ACC %d%%" % [
@@ -397,6 +399,10 @@ func _aim_position() -> Vector2:
 	if turret_input:
 		return turret_input.aim_screen_position
 	return crosshair.get_local_mouse_position()
+
+
+func _cannon_ready() -> Variant:
+	return cannon.get_ready_ratio() if cannon else null
 
 
 func _gun_position() -> Variant:

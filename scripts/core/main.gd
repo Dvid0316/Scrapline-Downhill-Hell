@@ -19,6 +19,7 @@ extends Node3D
 @export var target_course: TargetCourse
 @export var score: ScoreTracker
 @export var weapon: HitscanWeapon
+@export var cannon: HitscanWeapon
 @export var turret_input: TurretInput
 @export var combat_hud: CombatHud
 
@@ -68,6 +69,8 @@ func _on_run_restarted() -> void:
 		score.reset()
 	if weapon:
 		weapon.reset_stats()
+	if cannon:
+		cannon.reset_stats()
 	if hull:
 		hull.reset()
 	if director:
@@ -93,8 +96,9 @@ func _on_train_wrecked() -> void:
 	train.paused = true
 	if turret_input:
 		turret_input.set_physics_process(false)
-	if weapon:
-		weapon.trigger_held = false
+	for w: HitscanWeapon in [weapon, cannon]:
+		if w:
+			w.trigger_held = false
 	if director:
 		director.stop()
 	if combat_hud:
@@ -188,9 +192,10 @@ func _notification(what: int) -> void:
 func quit_cleanly(exit_code: int = 0) -> void:
 	if turret_input:
 		turret_input.set_physics_process(false)
-	if weapon:
-		weapon.trigger_held = false
-		weapon.set_physics_process(false)
+	for w: HitscanWeapon in [weapon, cannon]:
+		if w:
+			w.trigger_held = false
+			w.set_physics_process(false)
 	get_tree().call_group(&"audio_shutdown", &"stop_all")
 	for i in 3:
 		await get_tree().process_frame

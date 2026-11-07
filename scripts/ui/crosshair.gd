@@ -15,6 +15,7 @@ extends Control
 @export var gun_ring_color: Color = Color(1.0, 0.72, 0.25, 0.85)
 ## Within this many pixels of the cursor, the ring reads as "on target".
 @export var on_target_pixels: float = 10.0
+@export var cannon_color: Color = Color(1.0, 0.45, 0.2, 1.0)
 
 var _marker_left: float = 0.0
 var _marker_kill: bool = false
@@ -59,6 +60,7 @@ func _draw() -> void:
 			draw_line(gp, c, Color(ring_col, 0.25), 1.0)
 		draw_arc(gp + Vector2(1, 1), gun_ring_radius, 0.0, TAU, 40, shadow, thickness + 1.0)
 		draw_arc(gp, gun_ring_radius, 0.0, TAU, 40, ring_col, thickness)
+	_draw_cannon_ring(c, shadow)
 	if _marker_left > 0.0:
 		var col := kill_color if _marker_kill else hit_color
 		var s := 1.4 if _marker_kill else 1.0
@@ -69,10 +71,32 @@ func _draw() -> void:
 			draw_line(c + n * inner, c + n * outer, col, thickness + 1.0)
 
 
+## Cannon reload: an arc around the crosshair fills clockwise while it
+## reloads, then shows a faint full ring with a brighter tick when loaded.
+func _draw_cannon_ring(c: Vector2, shadow: Color) -> void:
+	var r: Variant = cannon_provider.call() if cannon_provider.is_valid() else null
+	if r == null:
+		return
+	var ratio: float = r
+	var radius := gap + arm + 9.0
+	var start := -PI * 0.5
+	if ratio >= 1.0:
+		draw_arc(c, radius, 0.0, TAU, 48, Color(cannon_color, 0.35), 2.0)
+		for k in 4:
+			var a := start + k * PI * 0.5
+			var d := Vector2(cos(a), sin(a))
+			draw_line(c + d * (radius - 4.0), c + d * (radius + 4.0), cannon_color, 2.5)
+	else:
+		draw_arc(c, radius, start, start + TAU * ratio, 48, shadow, 5.0)
+		draw_arc(c, radius, start, start + TAU * ratio, 48, Color(cannon_color, 0.9), 3.0)
+
+
 ## Overridden by CombatHud via [member aim_provider].
 var aim_provider: Callable
 ## Returns the barrel reticle's screen position, or null to hide it.
 var gun_provider: Callable
+## Returns the cannon's ready ratio (0 = just fired, 1 = loaded), or null.
+var cannon_provider: Callable
 
 
 func get_aim_position() -> Vector2:

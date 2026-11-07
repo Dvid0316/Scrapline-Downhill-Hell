@@ -15,6 +15,7 @@ extends Node
 ## The weapon never touches the camera. Shake comes only from explosions.
 
 @export var weapon: HitscanWeapon
+@export var cannon: HitscanWeapon
 @export var turret: MountedTurret
 @export var effects: EffectsManager
 @export var audio: CombatAudio
@@ -41,6 +42,10 @@ func _ready() -> void:
 	if weapon:
 		weapon.shot_fired.connect(_on_shot_fired)
 		weapon.shot_impact.connect(_on_shot_impact)
+	if cannon:
+		cannon.shot_fired.connect(_on_cannon_fired)
+		cannon.shot_impact.connect(_on_cannon_impact)
+		cannon.splashed.connect(_on_cannon_splash)
 	if hull:
 		hull.hit_taken.connect(_on_hull_hit)
 		hull.wrecked.connect(_on_train_wrecked)
@@ -82,6 +87,30 @@ func on_target_destroyed(target: Node, _source: Node) -> void:
 		hud.show_popup("+%d  %s" % [t.points, t.display_name], origin + Vector3.UP * 1.5)
 	if fireball:
 		_shake_at(origin, shake_per_destruction * t.explosion_scale)
+
+
+# ------------------------------------------------------------------ cannon (M4)
+
+func _on_cannon_fired(origin: Vector3, _dir: Vector3, end_point: Vector3, _is_tracer: bool) -> void:
+	if turret:
+		turret.play_fire_fx(&"cannon")
+	if audio:
+		audio.play_cannon()
+	if effects:
+		effects.spawn_tracer(origin, end_point, false, true)
+
+
+func _on_cannon_impact(_point: Vector3, _normal: Vector3, _surface: StringName, target: Node, killed: bool) -> void:
+	if hud and target != null:
+		hud.show_hit_marker(killed)
+
+
+## Every shell bursts where it lands (the splash damage itself is in HitscanWeapon).
+func _on_cannon_splash(point: Vector3, radius: float) -> void:
+	if effects:
+		effects.spawn_explosion(point, radius / 5.0, true)
+	if audio:
+		audio.play_explosion(point, true)
 
 
 # ------------------------------------------------------------------ enemies (M3)

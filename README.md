@@ -32,7 +32,8 @@ which takes about a second.
 | Input | Action |
 |---|---|
 | **Mouse** | Aim the turret (a crosshair follows the cursor) |
-| **Hold left mouse button** | Continuous fire. Release to stop. |
+| **Hold left mouse button** | Machine gun: continuous fire. Release to stop. |
+| **Right mouse button** (or `E`) | Heavy cannon: about 2 explosive shells a second. Hold it to keep firing. Works at the same time as the MG. |
 | `W` / `S` or `↑` / `↓` (also `+` / `-`) | Raise / lower train target speed |
 | `Space` | Pause / resume the train |
 | `R` | Restart the run: full hull, wave 1, score resets. (Also how you continue after the train is wrecked.) |
@@ -80,12 +81,21 @@ swings after your cursor and locks on once it catches up.
 | Crate | 30 | 25 | Splinters (no fireball) |
 | Generator | 90 | 120 | Down on the valley side |
 
-The gun does 12 damage per round at 11 rounds per second, with a 320 m range
-and 0.6° spread. Every second round is a tracer. There's no reloading.
+The **machine gun** does 12 damage per round at 11 rounds per second, with a 320 m
+range and 0.6° spread. Every second round is a tracer. There's no reloading.
+
+The **heavy cannon** is mounted beside the MG on the same turret, so it aims
+wherever the MG aims. Each shell does 40 damage on a direct hit, then bursts
+for up to 45 more to everything within 5.5 m (less toward the edge). That's
+one shell per drone, often two drones per shell, about 6 shells for a gun
+truck, and great for chain-reacting barrel yards. It fires 2 shells a second
+with a 360 m range. An orange ring around the crosshair fills as it reloads,
+and four ticks show when it's loaded. Shells never hurt your own train.
 
 ## Tuning (Inspector, `scenes/main.tscn`)
 
-- **Combat/Weapon** (`HitscanWeapon`): `fire_rate`, `damage`, `max_range`, `spread_degrees`, `tracer_every`
+- **Combat/Weapon** (`HitscanWeapon`, the MG): `fire_rate`, `damage`, `max_range`, `spread_degrees`, `tracer_every`
+- **Combat/Cannon** (`HitscanWeapon` with `muzzle_slot = cannon`): the same knobs plus `splash_radius` and `splash_damage`. Recoil and flash are on the turret (`cannon_recoil_*`, `cannon_flash_*`).
 - **Train/ArmoredRailcar/TurretMount/HeavyMGTurret** (`MountedTurret`): yaw/pitch speed and acceleration, `settle_rate`, pitch limits, front-arc limit, recoil, flash
 - **Combat/Audio** (`CombatAudio`): per-sound volume, polyphony, impact rate limit. Also adjustable in the editor's **Audio** panel with three buses: *Weapons*, *Impacts*, *Explosions*.
 - **Combat/Effects** (`EffectsManager`): pool sizes, tracer speed and length, explosion size
@@ -101,7 +111,7 @@ and 0.6° spread. Every second round is a tracer. There's no reloading.
 ## Tests
 
 ```bash
-tests/run_all.sh     # import/parse + Milestone 1 (20) + Milestone 2 (39) + Milestone 3 (65 checks)
+tests/run_all.sh     # import/parse + Milestone 1 (20) + Milestone 2 (39) + Milestone 3 (65) + cannon (24 checks)
 ```
 
 Or run them individually:
@@ -111,6 +121,7 @@ godot --headless --path . --import
 godot --headless --path . --fixed-fps 60 -s res://tests/test_milestone1.gd
 godot --headless --path . --fixed-fps 60 -s res://tests/test_milestone2.gd
 godot --headless --path . --fixed-fps 60 -s res://tests/test_milestone3.gd
+godot --headless --path . --fixed-fps 60 -s res://tests/test_cannon.gd
 ```
 
 Headless runs can't simulate the mouse or play sound. The M2 tests drive the
@@ -138,7 +149,7 @@ python3 tools/gen_sfx.py                               # regenerate the placehol
 scenes/
   main.tscn             playable scene
   train/                train (controller), locomotive, armored_railcar, bogie
-  weapons/              heavy_mg_turret.tscn (mounted on the railcar's TurretMount)
+  weapons/              heavy_mg_turret.tscn (MG + cannon, mounted on the railcar's TurretMount)
   targets/              armored_plate, armored_bunker, explosive_barrel, wooden_crate, power_generator
   enemies/              raider_buggy, gun_truck, strafe_drone, kamikaze_drone
   camera/ track/ environment/props/ ui/ (debug_hud, combat_hud)
@@ -155,7 +166,7 @@ scripts/
   camera/ track/ environment/ ui/ (combat_hud, crosshair, threat_indicators)
 audio/sfx/    synthesized WAVs (see tools/gen_sfx.py)
 materials/    StandardMaterial3D .tres files
-tests/        run_all.sh, test_milestone1.gd, test_milestone2.gd, test_milestone3.gd
+tests/        run_all.sh, test_milestone1.gd, test_milestone2.gd, test_milestone3.gd, test_cannon.gd
 tools/        gen_sfx.py
 ```
 

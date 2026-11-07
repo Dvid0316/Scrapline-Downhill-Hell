@@ -7,7 +7,7 @@ extends CanvasLayer
 @onready var _stats: Label = %Stats
 @onready var _help: Label = %Help
 
-const HELP := """Mouse  aim    Hold LMB  fire
+const HELP := """Mouse  aim    Hold LMB  MG    RMB  cannon
 W/S or Up/Down  speed ±
 Space  pause    R  restart run
 [ ]  camera pitch    , .  or wheel  distance

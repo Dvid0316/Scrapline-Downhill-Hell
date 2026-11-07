@@ -2,6 +2,9 @@ class_name MountedTurret
 extends Node3D
 ## Heavy MG turret: rotating base (Yaw), elevating gun (Pitch), recoiling
 ## barrel assembly (Recoil), and muzzle (Muzzle + MuzzleFlash).
+## A heavy cannon rides on the same elevating mount (CannonRecoil,
+## CannonMuzzle, CannonFlash), so both guns aim together. Weapons pick
+## which barrel they fire from by slot: &"mg" or &"cannon".
 ##
 ## The turret only aims and animates. It doesn't fire. Give it a world-space
 ## [member aim_point] and it slews toward it at the configured speeds. Because
@@ -33,6 +36,10 @@ extends Node3D
 @export var recoil_return_speed: float = 18.0
 @export var flash_duration: float = 0.045
 @export var flash_light_energy: float = 6.0
+@export var cannon_recoil_distance: float = 0.45
+@export var cannon_recoil_return_speed: float = 3.5
+@export var cannon_flash_duration: float = 0.08
+@export var cannon_flash_light_energy: float = 14.0
 
 var aim_point: Vector3
 var has_aim: bool = false
@@ -43,6 +50,11 @@ var has_aim: bool = false
 @onready var _muzzle: Marker3D = $Yaw/Pitch/Recoil/Muzzle
 @onready var _flash: Node3D = $Yaw/Pitch/Recoil/MuzzleFlash
 @onready var _flash_light: OmniLight3D = $Yaw/Pitch/Recoil/MuzzleFlash/FlashLight
+@onready var _c_recoil: Node3D = get_node_or_null(^"Yaw/Pitch/CannonRecoil")
+@onready var _c_muzzle: Marker3D = get_node_or_null(^"Yaw/Pitch/CannonRecoil/CannonMuzzle")
+@onready var _c_flash: Node3D = get_node_or_null(^"Yaw/Pitch/CannonRecoil/CannonFlash")
+@onready var _c_flash_light: OmniLight3D = get_node_or_null(^"Yaw/Pitch/CannonRecoil/CannonFlash/FlashLight")
+var _c_flash_left: float = 0.0
 
 var _yaw_vel: float = 0.0
 var _pitch_vel: float = 0.0
@@ -57,6 +69,9 @@ var _rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	_flash.visible = false
 	_flash_light.light_energy = 0.0
+	if _c_flash:
+		_c_flash.visible = false
+		_c_flash_light.light_energy = 0.0
 
 
 func aim_at(world_point: Vector3) -> void:
@@ -85,6 +100,13 @@ func _process(delta: float) -> void:
 		if _flash_left <= 0.0:
 			_flash.visible = false
 			_flash_light.light_energy = 0.0
+	if _c_recoil:
+		_c_recoil.position.z = move_toward(_c_recoil.position.z, 0.0, cannon_recoil_return_speed * cannon_recoil_distance * delta)
+	if _c_flash_left > 0.0:
+		_c_flash_left -= delta
+		if _c_flash_left <= 0.0:
+			_c_flash.visible = false
+			_c_flash_light.light_energy = 0.0
 
 
 ## Instantly face the current aim point (tests, respawn).
@@ -128,13 +150,21 @@ func _drive(vel: float, remaining: float, goal_rate: float, max_deg: float, acce
 	return move_toward(vel, want, deg_to_rad(accel_deg) * delta)
 
 
-func get_muzzle_transform() -> Transform3D:
-	return _muzzle.global_transform
+func get_muzzle_transform(slot: StringName = &"mg") -> Transform3D:
+	return _muzzle_for(slot).global_transform
 
 
 ## World direction the barrel is actually pointing (shots go this way).
-func get_barrel_direction() -> Vector3:
-	return -_muzzle.global_transform.basis.z.normalized()
+func get_barrel_direction(slot: StringName = &"mg") -> Vector3:
+	return -_muzzle_for(slot).global_transform.basis.z.normalized()
+
+
+func has_cannon() -> bool:
+	return _c_muzzle != null
+
+
+func _muzzle_for(slot: StringName) -> Marker3D:
+	return _c_muzzle if slot == &"cannon" and _c_muzzle else _muzzle
 
 
 ## Angle (degrees) between where the barrel points and the aim point.
@@ -146,7 +176,16 @@ func get_aim_error_degrees() -> float:
 
 
 ## Visual reaction to one shot: muzzle flash + barrel kick.
-func play_fire_fx() -> void:
+func play_fire_fx(slot: StringName = &"mg") -> void:
+	if slot == &"cannon" and _c_recoil:
+		_c_recoil.position.z = cannon_recoil_distance
+		_c_flash.visible = true
+		_c_flash.rotation.z = _rng.randf() * TAU
+		var cs := _rng.randf_range(0.9, 1.2)
+		_c_flash.scale = Vector3(cs, cs, cs)
+		_c_flash_light.light_energy = cannon_flash_light_energy
+		_c_flash_left = cannon_flash_duration
+		return
 	_recoil.position.z = recoil_distance
 	_flash.visible = true
 	_flash.rotation.z = _rng.randf() * TAU

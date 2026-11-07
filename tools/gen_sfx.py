@@ -188,6 +188,31 @@ def crate_break():
     return fade_tail(out)
 
 
+def cannon_shot():
+    """Player cannon: deep concussive boom with a sharp crack on top and a
+    short rumbling tail. Heavier and longer than the MG, shorter than an
+    explosion, so it reads as 'big gun' without masking the impacts."""
+    rng = random.Random(8)
+    crack_lp, body_lp, tail_lp = Lowpass(4200), Lowpass(700), Lowpass(220)
+    hp = Highpass(1800)
+    phase = 0.0
+    brown = 0.0
+    out = []
+    for i in range(n_samples(0.75)):
+        t = i / SR
+        w = rng.uniform(-1, 1)
+        brown = 0.98 * brown + w * 0.2
+        attack = min(1.0, t / 0.002)
+        crack = hp(crack_lp(w)) * math.exp(-t / 0.01) * 1.8
+        body = body_lp(w) * math.exp(-t / 0.05) * 2.2 * attack
+        freq = 48 + 70 * math.exp(-t / 0.04)
+        phase += 2 * math.pi * freq / SR
+        thump = math.sin(phase) * math.exp(-t / 0.16) * 1.6 * attack
+        tail = tail_lp(brown) * math.exp(-t / 0.22) * 2.5
+        out.append(soft_clip(crack + body + thump + tail, 1.6))
+    return fade_tail(out, 30)
+
+
 def enemy_shot():
     """Enemy rifle-calibre round: thinner, snappier 'pap' than the player's MG,
     so you can hear incoming fire without it fighting your own gun."""
@@ -262,6 +287,7 @@ if __name__ == "__main__":
     write("explosion.wav", explosion())
     write("crate_break.wav", crate_break(), -2)
     write("enemy_shot.wav", enemy_shot(), -3)
+    write("cannon_shot.wav", cannon_shot(), -1)
     write("wave_horn.wav", wave_horn(), -2)
     write("wave_clear.wav", wave_clear(), -4)
     write("kamikaze_beep.wav", kamikaze_beep(), -6)

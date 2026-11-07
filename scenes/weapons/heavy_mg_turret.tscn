@@ -86,6 +86,33 @@ rings = 4
 [sub_resource type="BoxMesh" id="BoxMesh_17"]
 size = Vector3(0.75, 0.75, 0.02)
 
+[sub_resource type="BoxMesh" id="Cannon_1"]
+size = Vector3(0.36, 0.36, 0.9)
+
+[sub_resource type="CylinderMesh" id="Cannon_2"]
+top_radius = 0.17
+bottom_radius = 0.17
+height = 0.8
+radial_segments = 12
+rings = 1
+
+[sub_resource type="CylinderMesh" id="Cannon_3"]
+top_radius = 0.1
+bottom_radius = 0.11
+height = 1.8
+radial_segments = 12
+rings = 1
+
+[sub_resource type="BoxMesh" id="Cannon_4"]
+size = Vector3(0.38, 0.22, 0.3)
+
+[sub_resource type="CylinderMesh" id="Cannon_5"]
+top_radius = 0.185
+bottom_radius = 0.185
+height = 0.08
+radial_segments = 12
+rings = 1
+
 [node name="HeavyMGTurret" type="Node3D"]
 script = ExtResource("1_mounted_turr")
 
@@ -199,4 +226,59 @@ material_override = ExtResource("7_muzzle_flash")
 light_color = Color(1.0, 0.7, 0.35, 1.0)
 light_energy = 0.0
 omni_range = 8.0
+shadow_enabled = false
+
+[node name="CannonRecoil" type="Node3D" parent="Yaw/Pitch"]
+position = Vector3(0.62, 0.02, 0.0)
+
+[node name="Breech" type="MeshInstance3D" parent="Yaw/Pitch/CannonRecoil"]
+position = Vector3(0.0, 0.0, 0.2)
+mesh = SubResource("Cannon_1")
+material_override = ExtResource("2_armor_dark")
+
+[node name="Sleeve" type="MeshInstance3D" parent="Yaw/Pitch/CannonRecoil"]
+position = Vector3(0.0, 0.0, -0.45)
+rotation_degrees = Vector3(90.0, 0.0, 0.0)
+mesh = SubResource("Cannon_2")
+material_override = ExtResource("3_armor_plate")
+
+[node name="Band" type="MeshInstance3D" parent="Yaw/Pitch/CannonRecoil"]
+position = Vector3(0.0, 0.0, -0.1)
+rotation_degrees = Vector3(90.0, 0.0, 0.0)
+mesh = SubResource("Cannon_5")
+material_override = ExtResource("4_hazard_yello")
+
+[node name="Barrel" type="MeshInstance3D" parent="Yaw/Pitch/CannonRecoil"]
+position = Vector3(0.0, 0.0, -1.5)
+rotation_degrees = Vector3(90.0, 0.0, 0.0)
+mesh = SubResource("Cannon_3")
+material_override = ExtResource("6_steel_worn")
+
+[node name="MuzzleBrake" type="MeshInstance3D" parent="Yaw/Pitch/CannonRecoil"]
+position = Vector3(0.0, 0.0, -2.45)
+mesh = SubResource("Cannon_4")
+material_override = ExtResource("2_armor_dark")
+
+[node name="CannonMuzzle" type="Marker3D" parent="Yaw/Pitch/CannonRecoil"]
+position = Vector3(0.0, 0.0, -2.65)
+
+[node name="CannonFlash" type="Node3D" parent="Yaw/Pitch/CannonRecoil"]
+position = Vector3(0.0, 0.0, -2.7)
+
+[node name="Cone" type="MeshInstance3D" parent="Yaw/Pitch/CannonRecoil/CannonFlash"]
+position = Vector3(0.0, 0.0, -0.7)
+rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+scale = Vector3(2.0, 1.7, 2.0)
+mesh = SubResource("CylinderMesh_15")
+material_override = ExtResource("7_muzzle_flash")
+
+[node name="Core" type="MeshInstance3D" parent="Yaw/Pitch/CannonRecoil/CannonFlash"]
+scale = Vector3(2.4, 2.4, 2.4)
+mesh = SubResource("SphereMesh_16")
+material_override = ExtResource("7_muzzle_flash")
+
+[node name="FlashLight" type="OmniLight3D" parent="Yaw/Pitch/CannonRecoil/CannonFlash"]
+light_color = Color(1.0, 0.65, 0.3, 1.0)
+light_energy = 0.0
+omni_range = 14.0
 shadow_enabled = false

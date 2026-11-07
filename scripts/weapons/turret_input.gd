@@ -14,6 +14,8 @@ extends Node
 @export var camera: Camera3D
 @export var turret: MountedTurret
 @export var weapon: HitscanWeapon
+## Second gun on the same turret (right mouse button). Optional.
+@export var cannon: HitscanWeapon
 @export var fallback_distance: float = 200.0
 @export var confine_cursor: bool = true
 
@@ -56,6 +58,8 @@ func _physics_process(_delta: float) -> void:
 	_update_gun_point()
 	if weapon:
 		weapon.trigger_held = debug_auto_fire or Input.is_action_pressed(&"fire")
+	if cannon:
+		cannon.trigger_held = debug_auto_fire or Input.is_action_pressed(&"fire_cannon")
 
 
 func _update_gun_point() -> void:
@@ -90,8 +94,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and weapon:
-		weapon.trigger_held = false
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		if weapon:
+			weapon.trigger_held = false
+		if cannon:
+			cannon.trigger_held = false
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		_capture_cursor.call_deferred()
 

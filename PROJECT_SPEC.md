@@ -184,6 +184,9 @@ enemies, difficulty settings, menus.
 frame rate held at the 145 Hz display cap (1% low 144 FPS, worst frame 6.9 ms).
 Render cost was GPU 2.1 ms and CPU 0.4 ms per frame.
 
+### Heavy cannon ✅ (requested after M3)
+Second player weapon on the same turret: right mouse button, 2 shells per second, 40 direct plus 45 splash in 5.5 m. It reuses `HitscanWeapon` (with a muzzle slot and explosive-round options) and the same feedback paths. 24 headless checks.
+
 ### Milestone 4+ (needs approval)
 
 ## Open questions for later milestones

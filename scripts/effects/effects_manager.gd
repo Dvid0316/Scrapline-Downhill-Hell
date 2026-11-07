@@ -8,12 +8,15 @@ extends Node3D
 @export_group("Pool sizes")
 @export_range(4, 128) var tracer_pool: int = 40
 @export_range(2, 64) var impact_pool: int = 14
-@export_range(1, 16) var explosion_pool: int = 5
+@export_range(1, 16) var explosion_pool: int = 8
 
 @export_group("Tracers")
 @export var tracer_speed: float = 520.0
 @export var tracer_length: float = 7.0
 @export var tracer_width: float = 0.07
+## Cannon shells: drawn this many times thicker and longer than MG tracers.
+@export var shell_width_scale: float = 3.5
+@export var shell_length_scale: float = 0.6
 
 @export_group("Explosions")
 @export var explosion_base_radius: float = 2.6
@@ -33,6 +36,8 @@ var _tr_from: PackedVector3Array
 var _tr_dir: PackedVector3Array
 var _tr_total: PackedFloat32Array
 var _tr_travel: PackedFloat32Array
+var _tr_width: PackedFloat32Array
+var _tr_len: PackedFloat32Array
 var _tr_next := 0
 
 var _sparks: Array[CPUParticles3D] = []
@@ -74,6 +79,8 @@ func _build_tracers() -> void:
 	_tr_dir.resize(tracer_pool)
 	_tr_total.resize(tracer_pool)
 	_tr_travel.resize(tracer_pool)
+	_tr_width.resize(tracer_pool)
+	_tr_len.resize(tracer_pool)
 	for i in tracer_pool:
 		var mi := MeshInstance3D.new()
 		mi.name = "Tracer%d" % i
@@ -89,7 +96,8 @@ func _build_tracers() -> void:
 
 
 ## [param hostile] = red enemy tracer instead of the player's amber one.
-func spawn_tracer(from: Vector3, to: Vector3, hostile: bool = false) -> void:
+## [param shell] = fat, short cannon shell.
+func spawn_tracer(from: Vector3, to: Vector3, hostile: bool = false, shell: bool = false) -> void:
 	var i := _tr_next
 	_tr_next = (_tr_next + 1) % tracer_pool
 	var v := to - from
@@ -98,6 +106,8 @@ func spawn_tracer(from: Vector3, to: Vector3, hostile: bool = false) -> void:
 	_tr_dir[i] = v / maxf(_tr_total[i], 0.001)
 	_tr_travel[i] = 0.0
 	_tracers[i].material_override = HOSTILE_TRACER_MAT if hostile else TRACER_MAT
+	_tr_width[i] = shell_width_scale if shell else 1.0
+	_tr_len[i] = tracer_length * (shell_length_scale if shell else 1.0)
 	_tracers[i].visible = true
 	_update_tracer(i)
 
@@ -107,7 +117,7 @@ func _process(delta: float) -> void:
 		if not _tracers[i].visible:
 			continue
 		_tr_travel[i] += tracer_speed * delta
-		if _tr_travel[i] - tracer_length >= _tr_total[i]:
+		if _tr_travel[i] - _tr_len[i] >= _tr_total[i]:
 			_tracers[i].visible = false
 		else:
 			_update_tracer(i)
@@ -118,12 +128,13 @@ func _process(delta: float) -> void:
 
 func _update_tracer(i: int) -> void:
 	var head := minf(_tr_travel[i], _tr_total[i])
-	var tail := maxf(_tr_travel[i] - tracer_length, 0.0)
+	var tail := maxf(_tr_travel[i] - _tr_len[i], 0.0)
 	var seg_len := maxf(head - tail, 0.05)
 	var dir: Vector3 = _tr_dir[i]
 	var mid: Vector3 = _tr_from[i] + dir * ((head + tail) * 0.5)
 	var up := Vector3.UP if absf(dir.y) < 0.98 else Vector3.RIGHT
-	var basis := Basis.looking_at(dir, up) * Basis.from_scale(Vector3(1.0, 1.0, seg_len))
+	var w := _tr_width[i]
+	var basis := Basis.looking_at(dir, up) * Basis.from_scale(Vector3(w, w, seg_len))
 	_tracers[i].global_transform = Transform3D(basis, mid)
 
 

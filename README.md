@@ -203,3 +203,8 @@ tools/        gen_sfx.py
 ```
 
 See `PROJECT_SPEC.md` for the design and architecture, and `CHANGELOG.md` for history.
+
+## License
+
+Code, scenes and the generated sound effects: [MIT](LICENSE).
+Third-party textures are CC0 (public domain). Sources are in [CREDITS.md](CREDITS.md).

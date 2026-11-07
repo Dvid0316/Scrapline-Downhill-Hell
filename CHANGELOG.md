@@ -3,6 +3,19 @@
 All notable changes to this project. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.7.0] - 2026-11-06: Between-wave upgrades
+
+### Added
+- **Upgrade cards.** Clearing a wave pauses the countdown and offers 3 cards. Click one, or press `1`/`2`/`3`. The guns hold fire while the cards are up, and the cursor shows. Picks stack up to each card's max level and reset with `R`. The first offer of a run always includes a new weapon. Emergency Patch is weighted up when the hull is low, and once every other card is maxed it's the only one left.
+- **Tesla Coil** (new weapon, `TeslaCoil`): a procedural coil on the locomotive's hood that arcs to the nearest enemy, with chain lightning at higher levels. `LightningBolt` draws it as camera-facing additive ribbons that re-jag every frame.
+- **Rocket Pod** (new weapon, `RocketPod`): a four-tube launcher on the gun car's rear deck. Its homing rockets have puff smoke trails, a proximity fuse that checks the whole step each frame, and splash damage.
+- **Ricochet Rounds** (`HitscanWeapon.ricochet_bounces`), plus MG fire-rate/damage, turret-servo, cannon reload/blast, max-hull, damage-reduction (`TrainHull.damage_mult`) and full-repair cards.
+- New synthesized sounds: `tesla_zap.wav`, `rocket_launch.wav`, `upgrade_pick.wav`. The existing sounds are byte-identical.
+- `--upgrades=id[:n],...` dev flag, `tools/upgrade_shot.gd` screenshots, and `tests/test_upgrades.gd` (53 checks).
+
+### Fixed
+- Cannon test flake: it aimed straight through the locomotive's line of fire. Since 0.6.1 the gun lifts over the locomotive, so the shell could sail out of range. The test now aims beside the track.
+
 ## [0.6.1] - 2026-11-06: Close-range aiming fix
 
 ### Fixed

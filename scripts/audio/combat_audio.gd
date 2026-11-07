@@ -24,6 +24,9 @@ extends Node3D
 @export var wave_horn_stream: AudioStream = preload("res://audio/sfx/wave_horn.wav")
 @export var wave_clear_stream: AudioStream = preload("res://audio/sfx/wave_clear.wav")
 @export var warning_stream: AudioStream = preload("res://audio/sfx/kamikaze_beep.wav")
+@export var zap_stream: AudioStream = preload("res://audio/sfx/tesla_zap.wav")
+@export var rocket_stream: AudioStream = preload("res://audio/sfx/rocket_launch.wav")
+@export var upgrade_stream: AudioStream = preload("res://audio/sfx/upgrade_pick.wav")
 
 @export_group("Volume (dB)")
 @export_range(-40.0, 12.0) var gun_volume_db: float = -5.0
@@ -55,8 +58,11 @@ var _last_enemy_gun_time := -1.0
 var _cue: AudioStreamPlayer
 var _cannon: AudioStreamPlayer
 var _warning: AudioStreamPlayer3D
+var _zap: AudioStreamPlayer3D
+var _rockets: Array[AudioStreamPlayer3D] = []
+var _rocket_next := 0
 ## Requests per category (for tests/debug). Counted even when muted.
-var requested := {&"shot": 0, &"impact": 0, &"explosion": 0, &"enemy_shot": 0, &"cue": 0, &"warning": 0, &"cannon": 0}
+var requested := {&"shot": 0, &"impact": 0, &"explosion": 0, &"enemy_shot": 0, &"cue": 0, &"warning": 0, &"cannon": 0, &"zap": 0, &"rocket": 0}
 ## Headless runs (CI/tests) have a dummy audio driver that never mixes, so
 ## playbacks would pile up unreleased. Count the requests but don't play.
 var _silent := false
@@ -101,6 +107,13 @@ func _ready() -> void:
 	add_child(_cue)
 	_warning = _make_3d("Warning", &"Weapons", cue_volume_db, 40.0)
 	_warning.stream = warning_stream
+	_zap = _make_3d("Zap", &"Weapons", cue_volume_db, 40.0)
+	_zap.stream = _randomized(zap_stream, 1.15, 2.0)
+	_zap.max_polyphony = 2
+	for i in 2:
+		var r := _make_3d("Rocket%d" % i, &"Weapons", cannon_volume_db - 2.0, 40.0)
+		r.stream = _randomized(rocket_stream, 1.1, 1.5)
+		_rockets.append(r)
 
 
 ## Stop everything on shutdown/scene change so no playbacks outlive the scene
@@ -124,6 +137,10 @@ func stop_all() -> void:
 		_cannon.stop()
 	if _warning:
 		_warning.stop()
+	if _zap:
+		_zap.stop()
+	for p in _rockets:
+		p.stop()
 
 
 func play_shot() -> void:
@@ -193,14 +210,37 @@ func play_enemy_shot(point: Vector3) -> void:
 	p.play()
 
 
-## Non-positional cue: &"wave_start" or &"wave_clear".
+## Non-positional cue: &"wave_start", &"wave_clear" or &"upgrade".
 func play_cue(cue: StringName) -> void:
 	requested[&"cue"] += 1
 	if _silent:
 		return
-	_cue.stream = wave_horn_stream if cue == &"wave_start" else wave_clear_stream
+	match cue:
+		&"wave_start": _cue.stream = wave_horn_stream
+		&"upgrade": _cue.stream = upgrade_stream
+		_: _cue.stream = wave_clear_stream
 	_cue.volume_db = cue_volume_db
 	_cue.play()
+
+
+## Tesla coil arc.
+func play_zap(point: Vector3) -> void:
+	requested[&"zap"] += 1
+	if _silent:
+		return
+	_zap.global_position = point
+	_zap.play()
+
+
+## Rocket pod launch.
+func play_rocket(point: Vector3) -> void:
+	requested[&"rocket"] += 1
+	if _silent:
+		return
+	var p := _rockets[_rocket_next]
+	_rocket_next = (_rocket_next + 1) % _rockets.size()
+	p.global_position = point
+	p.play()
 
 
 ## Kamikaze arming beep at its position.

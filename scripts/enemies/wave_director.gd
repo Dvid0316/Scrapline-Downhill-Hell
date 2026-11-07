@@ -56,6 +56,8 @@ var wave_name: String = ""
 ## Seconds left in the current breather.
 var breather_left: float = 0.0
 var enemies_killed: int = 0
+## While true the breather countdown waits (the upgrade picker is open).
+var hold: bool = false
 
 var _pools := {}            # kind -> Array[EnemyBase]
 var _queue: Array[StringName] = []
@@ -84,6 +86,7 @@ func reset(start_wave: int = 1) -> void:
 	_rng.seed = random_seed
 	_spawn_counter = 0
 	enemies_killed = 0
+	hold = false
 	wave = maxi(start_wave, 1) - 1
 	wave_name = ""
 	if enabled:
@@ -113,6 +116,8 @@ func set_enabled(on: bool) -> void:
 func _physics_process(delta: float) -> void:
 	match state:
 		State.BREATHER:
+			if hold:
+				return
 			breather_left -= delta
 			if breather_left <= 0.0:
 				start_next_wave()

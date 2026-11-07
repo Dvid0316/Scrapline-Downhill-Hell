@@ -17,6 +17,8 @@ const GROUP := &"train_hull"
 @export var max_hull: float = 400.0
 ## Dev/testing: hits are still reported but don't reduce the hull.
 @export var invulnerable: bool = false
+## Incoming damage is multiplied by this (armour upgrades lower it).
+@export_range(0.05, 2.0) var damage_mult: float = 1.0
 
 var hull: float
 var is_wrecked: bool = false
@@ -43,6 +45,7 @@ func reset() -> void:
 func apply_hit(amount: float, point: Vector3) -> void:
 	if is_wrecked or amount <= 0.0:
 		return
+	amount *= damage_mult
 	hits_taken += 1
 	damage_taken += amount
 	if not invulnerable:
@@ -52,6 +55,13 @@ func apply_hit(amount: float, point: Vector3) -> void:
 	if hull <= 0.0:
 		is_wrecked = true
 		wrecked.emit()
+
+
+## Change the maximum, keeping the current hull; [param heal] is added on top.
+func set_max_hull(value: float, heal: float = 0.0) -> void:
+	max_hull = maxf(value, 1.0)
+	hull = clampf(hull + heal, 0.0, max_hull)
+	hull_changed.emit(hull, max_hull)
 
 
 ## Patch the hull up by a fraction of max (between waves).

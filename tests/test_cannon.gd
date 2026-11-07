@@ -180,7 +180,13 @@ func _test_feedback_and_camera() -> void:
 	var basis_before := camera.global_basis
 	var cannon_before: int = audio.requested[&"cannon"]
 	var expl_before: int = audio.requested[&"explosion"]
-	_aim(train.route.sample_world(train.get_centre_distance() + 40.0))
+	# Off to the side of the track ahead: straight ahead, the locomotive is in
+	# the way and the gun (rightly) lifts over it.
+	var ahead := train.get_centre_distance() + 40.0
+	var t := train.route.tangent_world(ahead, 2.0)
+	var side := Vector3(t.x, 0.0, t.z).normalized().cross(Vector3.UP)
+	var spot := train.route.sample_world(ahead) + side * 14.0
+	_aim(Vector3(spot.x, (main.get_node("Terrain") as TerrainBuilder).sample_height(spot.x, spot.z), spot.z))
 	await _frames(1)
 	cannon.trigger_held = true
 	for i in 60:

@@ -11,6 +11,7 @@ extends Node3D
 ##   --wave=N              start at wave N
 ##   --god                 hull takes no damage
 ##   --speed=KMH           start at this speed (also sets the throttle, capped)
+##   --upgrades=tesla:2,rockets   start with these upgrades (id[:levels], comma-separated)
 
 @export var train: TrainController
 @export var camera: FollowCamera
@@ -28,6 +29,7 @@ extends Node3D
 @export var hull: TrainHull
 @export var director: WaveDirector
 @export var feedback: CombatFeedback
+@export var upgrades: UpgradeManager
 
 @export_group("Debug tuning steps")
 @export var speed_step: float = 2.0
@@ -43,6 +45,7 @@ var _bench_frames := PackedFloat32Array()
 var _bench_gpu_ms := 0.0
 var _bench_cpu_ms := 0.0
 var _start_wave := 1
+var _start_upgrades := ""
 var game_over := false
 
 
@@ -58,12 +61,25 @@ func _ready() -> void:
 	_parse_user_args()
 	if director:
 		director.reset(_start_wave)
+	_grant_start_upgrades()
+
+
+func _grant_start_upgrades() -> void:
+	if upgrades == null or _start_upgrades == "":
+		return
+	for part in _start_upgrades.split(",", false):
+		var bits := part.split(":")
+		upgrades.grant(StringName(bits[0].strip_edges()), bits[1].to_int() if bits.size() > 1 else 1)
+	if hull:
+		hull.reset()
 
 
 ## New run: targets come back, score and accuracy start over, hull is
 ## repaired and the waves start again from the top.
 func _on_run_restarted() -> void:
 	game_over = false
+	if upgrades:
+		upgrades.reset()  # before the hull, so it resets to the base max
 	if target_course:
 		target_course.reset_all()
 	if score:
@@ -82,6 +98,7 @@ func _on_run_restarted() -> void:
 		combat_hud.hide_game_over()
 	if turret_input:
 		turret_input.set_physics_process(true)
+	_grant_start_upgrades()
 
 
 ## End of the line: the train jumps back to the top and the run carries on.
@@ -102,6 +119,8 @@ func _on_train_wrecked() -> void:
 			w.trigger_held = false
 	if director:
 		director.stop()
+	if upgrades:
+		upgrades.cancel()
 	if combat_hud:
 		combat_hud.show_game_over(director.wave if director else 0,
 			score.score if score else 0, score.enemy_kills if score else 0)
@@ -127,6 +146,8 @@ func _parse_user_args() -> void:
 			var v := arg.get_slice("=", 1).to_float() / 3.6
 			train.speed = v
 			train.target_speed = minf(v, train.max_speed)
+		elif arg.begins_with("--upgrades="):
+			_start_upgrades = arg.get_slice("=", 1)
 		elif arg == "--god" and hull:
 			hull.invulnerable = true
 		elif arg.begins_with("--bench="):

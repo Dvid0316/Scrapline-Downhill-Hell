@@ -279,6 +279,54 @@ def kamikaze_beep():
     return fade_tail(out)
 
 
+def tesla_zap():
+    """Tesla coil arc: buzzy crackle with a falling electric whine."""
+    rnd = random.Random(77)
+    hp = Highpass(900)
+    out = []
+    n = n_samples(0.32)
+    for i in range(n):
+        t = i / SR
+        e = min(1.0, t / 0.003) * math.exp(-t / 0.09)
+        f = 140 + 90 * math.exp(-t / 0.05)
+        buzz = 1.0 if math.sin(2 * math.pi * f * t) > 0 else -1.0  # square-ish 50-60 Hz family
+        crack = hp(rnd.uniform(-1, 1)) * (1.0 if rnd.random() < 0.35 else 0.2)
+        whine = math.sin(2 * math.pi * (2400 - 1600 * t / 0.32) * t) * 0.25
+        out.append(soft_clip((buzz * 0.45 + crack * 0.9 + whine) * e, 1.4))
+    return fade_tail(out, 15)
+
+
+def rocket_launch():
+    """Rocket pod: punchy pop, then a hissing whoosh that tails off."""
+    rnd = random.Random(31)
+    lp = Lowpass(2600)
+    out = []
+    n = n_samples(0.7)
+    for i in range(n):
+        t = i / SR
+        pop = math.sin(2 * math.pi * 95 * t) * math.exp(-t / 0.03)
+        hiss = lp(rnd.uniform(-1, 1)) * min(1.0, t / 0.02) * math.exp(-t / 0.28)
+        out.append(soft_clip(pop * 0.9 + hiss * 1.3, 1.2))
+    return fade_tail(out, 20)
+
+
+def upgrade_pick():
+    """Upgrade chosen: bright rising arpeggio with a shimmer on top."""
+    out = []
+    notes = [(0.0, 523.25), (0.07, 659.25), (0.14, 783.99), (0.21, 1046.5)]
+    for i in range(n_samples(1.0)):
+        t = i / SR
+        s = 0.0
+        for start, f in notes:
+            if t >= start:
+                dt = t - start
+                e = min(1.0, dt / 0.004) * math.exp(-dt / 0.35)
+                s += (math.sin(2 * math.pi * f * dt) + 0.35 * math.sin(2 * math.pi * 2 * f * dt)
+                      + 0.15 * math.sin(2 * math.pi * 3.01 * f * dt)) * e
+        out.append(s * 0.4)
+    return fade_tail(out, 25)
+
+
 if __name__ == "__main__":
     write("mg_shot.wav", mg_shot())
     write("impact_metal.wav", impact_metal(), -3)
@@ -291,3 +339,6 @@ if __name__ == "__main__":
     write("wave_horn.wav", wave_horn(), -2)
     write("wave_clear.wav", wave_clear(), -4)
     write("kamikaze_beep.wav", kamikaze_beep(), -6)
+    write("tesla_zap.wav", tesla_zap(), -4)
+    write("rocket_launch.wav", rocket_launch(), -3)
+    write("upgrade_pick.wav", upgrade_pick(), -4)

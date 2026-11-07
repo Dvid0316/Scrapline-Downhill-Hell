@@ -45,6 +45,7 @@ func _run() -> void:
 	input.set_physics_process(false)
 	weapon.set_physics_process(false)
 	director.set_enabled(false)  # tests spawn by hand until the wave test
+	(main.get_node("Combat/Upgrades") as UpgradeManager).enabled = false  # no cards between waves here
 	train.set_head_distance(316.0)  # absolute, so route changes don't move the test
 	await _frames(3)
 

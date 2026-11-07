@@ -34,6 +34,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/gun_truck.tscn" id="32_gun_truck"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/strafe_drone.tscn" id="33_strafe_dron"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/kamikaze_drone.tscn" id="34_kamikaze_dr"]
+[ext_resource type="Script" path="res://scripts/upgrades/upgrade_manager.gd" id="upgrade_manager"]
 [ext_resource type="Shader" path="res://shaders/stylized_sky.gdshader" id="35_sky_shader"]
 [ext_resource type="Script" path="res://scripts/environment/vegetation_scatter.gd" id="36_vegetation"]
 [ext_resource type="Script" path="res://scripts/track/trestle_builder.gd" id="37_trestle"]
@@ -77,7 +78,7 @@ adjustment_enabled = true
 adjustment_contrast = 1.1
 adjustment_saturation = 1.15
 
-[node name="Main" type="Node3D" node_paths=PackedStringArray("train", "camera", "hud", "target_course", "score", "weapon", "turret_input", "combat_hud", "hull", "director", "feedback", "cannon")]
+[node name="Main" type="Node3D" node_paths=PackedStringArray("train", "camera", "hud", "target_course", "score", "weapon", "turret_input", "combat_hud", "hull", "director", "feedback", "cannon", "upgrades")]
 script = ExtResource("1_main")
 train = NodePath("Train")
 camera = NodePath("FollowCamera")
@@ -90,6 +91,7 @@ combat_hud = NodePath("CombatHud")
 hull = NodePath("Combat/TrainHull")
 director = NodePath("Combat/WaveDirector")
 feedback = NodePath("Combat/Feedback")
+upgrades = NodePath("Combat/Upgrades")
 cannon = NodePath("Combat/Cannon")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -286,7 +288,19 @@ truck_scene = ExtResource("32_gun_truck")
 drone_scene = ExtResource("33_strafe_dron")
 kamikaze_scene = ExtResource("34_kamikaze_dr")
 
-[node name="Feedback" type="Node" parent="Combat" node_paths=PackedStringArray("weapon", "cannon", "turret", "effects", "audio", "hud", "camera", "hull", "director")]
+[node name="Upgrades" type="Node" parent="Combat" node_paths=PackedStringArray("director", "hull", "weapon", "cannon", "turret", "turret_input", "train", "hud", "audio")]
+script = ExtResource("upgrade_manager")
+director = NodePath("../WaveDirector")
+hull = NodePath("../TrainHull")
+weapon = NodePath("../Weapon")
+cannon = NodePath("../Cannon")
+turret = NodePath("../../Train/ArmoredRailcar/TurretMount/HeavyMGTurret")
+turret_input = NodePath("../TurretInput")
+train = NodePath("../../Train")
+hud = NodePath("../../CombatHud")
+audio = NodePath("../Audio")
+
+[node name="Feedback" type="Node" parent="Combat" node_paths=PackedStringArray("weapon", "cannon", "turret", "effects", "audio", "hud", "camera", "hull", "director", "upgrades")]
 script = ExtResource("27_combat_feedb")
 weapon = NodePath("../Weapon")
 cannon = NodePath("../Cannon")
@@ -297,6 +311,7 @@ hud = NodePath("../../CombatHud")
 camera = NodePath("../../FollowCamera")
 hull = NodePath("../TrainHull")
 director = NodePath("../WaveDirector")
+upgrades = NodePath("../Upgrades")
 
 [node name="CombatHud" parent="." node_paths=PackedStringArray("camera", "score", "weapon", "turret_input", "hull", "director", "cannon") instance=ExtResource("28_combat_hud")]
 camera = NodePath("../FollowCamera")

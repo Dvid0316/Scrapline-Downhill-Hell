@@ -43,6 +43,7 @@ which takes about a second.
 | `,` / `.` or mouse wheel | Camera distance |
 | `;` / `'` | Camera look-ahead |
 | `Home` | Reset the camera |
+| `1` / `2` / `3` (or click) | Pick an upgrade card after a wave |
 | `C` | Change the crosshair colour (pink, green, cyan, yellow, white). Remembered next time. |
 | `F1` | Toggle the debug overlay |
 | `Esc` | Release the mouse cursor. Click the window to grab it again. |
@@ -74,6 +75,28 @@ swings after your cursor and locks on once it catches up.
 - Waves 1–5 introduce one thing at a time (drones → raiders → kamikazes → gun truck → everything). After wave 5 they keep growing (+25% enemies and +10% enemy health per wave), so every run ends eventually.
 - At the bottom of the line the train loops back to the top **without** ending the run. The range targets come back, and enemies keep chasing.
 - When the hull hits zero the train blows up and brakes, and the game-over panel shows your wave and score. Press `R` to go again.
+
+## Upgrades
+
+Every time you clear a wave, the countdown stops and **three upgrade cards**
+come up. Click one (or press `1`, `2` or `3`). The next wave doesn't start
+until you choose. Upgrades stack up to their max level and last for the
+whole run. `R` starts over without them. The first offer of a run always
+includes a new weapon.
+
+| Card | Type | Max | What it does |
+|---|---|---|---|
+| **Tesla Coil** | New weapon | 3 | A coil on the engine roof zaps the nearest enemy (34 damage, 34 m reach) about once a second. Each level zaps faster and chains the lightning to one more enemy. |
+| **Rocket Pod** | New weapon | 3 | A launcher on the gun car's rear deck fires homing rockets (60 splash damage) every few seconds: 2 per volley, then 3, then 4. |
+| Ricochet Rounds | Machine gun | 2 | Bullets that hit an enemy bounce into the nearest other enemy for 60% damage (one bounce, then two) |
+| Hot Barrel | Machine gun | 3 | +30% fire rate per level |
+| AP Rounds | Machine gun | 3 | +35% damage per level |
+| Turbo Servos | Machine gun | 2 | The turret swings 50% faster per level |
+| Autoloader | Cannon | 3 | +40% fire rate per level |
+| Big Bang Shells | Cannon | 3 | +30% blast radius and +25% blast damage per level |
+| Scrap Armor | Armor | 4 | +100 max hull and +100 hull right away |
+| Reactive Plating | Armor | 3 | 15% less damage taken per level |
+| Emergency Patch | Armor | no limit | Hull back to full. It shows up more often when you're badly hurt. |
 
 ## Scoring
 
@@ -115,7 +138,7 @@ and four ticks show when it's loaded. Shells never hurt your own train.
 ## Tests
 
 ```bash
-tests/run_all.sh     # import/parse + Milestone 1 (20) + Milestone 2 (39) + Milestone 3 (65) + cannon (24 checks)
+tests/run_all.sh     # import/parse + Milestone 1-3, cannon, coaster and upgrade suites
 ```
 
 Or run them individually:
@@ -126,6 +149,8 @@ godot --headless --path . --fixed-fps 60 -s res://tests/test_milestone1.gd
 godot --headless --path . --fixed-fps 60 -s res://tests/test_milestone2.gd
 godot --headless --path . --fixed-fps 60 -s res://tests/test_milestone3.gd
 godot --headless --path . --fixed-fps 60 -s res://tests/test_cannon.gd
+godot --headless --path . --fixed-fps 60 -s res://tests/test_coaster.gd
+godot --headless --path . --fixed-fps 60 -s res://tests/test_upgrades.gd
 ```
 
 Headless runs can't simulate the mouse or play sound. The M2 tests drive the
@@ -142,6 +167,9 @@ godot --path . -- --capture=captures/shot.png --capture-delay=3   # screenshot, 
 godot --path . -- --demo-fire                          # auto-aim (enemies first) and fire (demo only)
 godot --path . -- --wave=4                             # start at wave 4
 godot --path . -- --god                                # hull takes no damage
+godot --path . -- --upgrades=tesla:2,rockets           # start with upgrades (id[:levels]; ids in the Upgrades table, e.g. mg_rate, cannon_blast)
+godot --path . -s res://tools/aim_probe.gd             # hit grid: can the gun reach raiders all round the car?
+godot --path . -s res://tools/upgrade_shot.gd          # screenshots of the upgrade cards and new weapons
 godot --path . -- --no-enemies                         # Milestone 2 free-fire range, no waves
 godot --path . --resolution 1920x1080 -- --demo-fire --bench=30   # FPS + GPU/CPU frame cost report
 python3 tools/gen_sfx.py                               # regenerate the placeholder sounds

@@ -23,6 +23,7 @@ extends Node
 @export var camera: FollowCamera
 @export var hull: TrainHull
 @export var director: WaveDirector
+@export var upgrades: UpgradeManager
 
 @export_group("Camera shake")
 ## Trauma added per destruction, times the target's explosion_scale.
@@ -46,6 +47,11 @@ func _ready() -> void:
 		cannon.shot_fired.connect(_on_cannon_fired)
 		cannon.shot_impact.connect(_on_cannon_impact)
 		cannon.splashed.connect(_on_cannon_splash)
+	if weapon:
+		weapon.ricocheted.connect(_on_ricochet)
+	if upgrades and upgrades.rockets:
+		upgrades.rockets.rocket_fired.connect(_on_rocket_fired)
+		upgrades.rockets.rocket_burst.connect(_on_rocket_burst)
 	if hull:
 		hull.hit_taken.connect(_on_hull_hit)
 		hull.wrecked.connect(_on_train_wrecked)
@@ -111,6 +117,29 @@ func _on_cannon_splash(point: Vector3, radius: float) -> void:
 		effects.spawn_explosion(point, radius / 5.0, true)
 	if audio:
 		audio.play_explosion(point, true)
+
+
+# ------------------------------------------------------------------ upgrades
+
+func _on_ricochet(from: Vector3, to: Vector3, _target: Node, killed: bool) -> void:
+	if effects:
+		effects.spawn_tracer(from, to)
+		effects.spawn_impact(to, (from - to).normalized(), &"metal")
+	if hud:
+		hud.show_hit_marker(killed)
+
+
+func _on_rocket_fired(origin: Vector3) -> void:
+	if audio:
+		audio.play_rocket(origin)
+
+
+func _on_rocket_burst(point: Vector3, radius: float) -> void:
+	if effects:
+		effects.spawn_explosion(point, radius / 5.0, true)
+	if audio:
+		audio.play_explosion(point, true)
+	_shake_at(point, 0.08)
 
 
 # ------------------------------------------------------------------ enemies (M3)

@@ -197,6 +197,9 @@ Render cost was GPU 2.1 ms and CPU 0.4 ms per frame.
 ### Heavy cannon ✅ (requested after M3)
 Second player weapon on the same turret: right mouse button, 2 shells per second, 40 direct plus 45 splash in 5.5 m. It reuses `HitscanWeapon` (with a muzzle slot and explosive-round options) and the same feedback paths. 24 headless checks.
 
+### Between-wave upgrades ✅ (requested after the coaster)
+After each cleared wave, the breather holds while the player picks one of three cards (mouse or `1`/`2`/`3`). There are 11 cards. Two are new automatic weapons: a Tesla coil on the locomotive (chain lightning) and a homing rocket pod on the gun car. The rest are MG mods (ricochet, fire rate, damage, turret speed), cannon mods (reload, blast size) and armour (max hull, damage reduction, full repair). Picks stack up to each card's max and reset on a new run. `UpgradeManager` recomputes every stat from captured base values. 53 headless checks in `tests/test_upgrades.gd`.
+
 ### Milestone 4+ (needs approval)
 
 ## Open questions for later milestones

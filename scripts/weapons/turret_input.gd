@@ -22,6 +22,8 @@ extends Node
 ## Dev/demo helpers (set from the command line, never in normal play).
 var debug_auto_fire: bool = false
 var debug_auto_aim: bool = false
+## While true the guns won't fire (a menu is taking the clicks).
+var suppress_fire: bool = false
 
 ## Screen position currently aimed at (viewport coordinates).
 var aim_screen_position: Vector2
@@ -56,10 +58,11 @@ func _physics_process(_delta: float) -> void:
 		aim_world_point = screen_to_aim_point(aim_screen_position)
 		turret.aim_at(aim_world_point)
 	_update_gun_point()
+	var can := not suppress_fire
 	if weapon:
-		weapon.trigger_held = debug_auto_fire or Input.is_action_pressed(&"fire")
+		weapon.trigger_held = can and (debug_auto_fire or Input.is_action_pressed(&"fire"))
 	if cannon:
-		cannon.trigger_held = debug_auto_fire or Input.is_action_pressed(&"fire_cannon")
+		cannon.trigger_held = can and (debug_auto_fire or Input.is_action_pressed(&"fire_cannon"))
 
 
 func _update_gun_point() -> void:

@@ -15,6 +15,8 @@ signal shot_fired(origin: Vector3, direction: Vector3, end_point: Vector3, is_tr
 signal shot_impact(point: Vector3, normal: Vector3, surface: StringName, target: Node, killed: bool)
 ## Explosive rounds only: the round burst at [param point].
 signal splashed(point: Vector3, radius: float)
+## Ricochet upgrade: a round bounced from [param from] into another enemy.
+signal ricocheted(from: Vector3, to: Vector3, target: Node, killed: bool)
 
 @export var turret: MountedTurret
 ## Which of the turret's barrels this gun fires from: &"mg" or &"cannon".
@@ -35,6 +37,12 @@ signal splashed(point: Vector3, radius: float)
 ## The thing it hit directly takes [member damage] only, not the splash too.
 @export var splash_radius: float = 0.0
 @export var splash_damage: float = 0.0
+
+@export_group("Ricochet")
+## Each round that hits an enemy bounces on to this many more nearby enemies.
+@export_range(0, 5) var ricochet_bounces: int = 0
+@export var ricochet_range: float = 16.0
+@export_range(0.0, 1.0) var ricochet_damage_ratio: float = 0.6
 
 ## Set by whoever controls the gun.
 var trigger_held: bool = false
@@ -106,11 +114,38 @@ func fire_ray(origin: Vector3, dir: Vector3) -> Node:
 		if &"surface" in target:
 			surface = target.surface
 		killed = target.apply_damage(damage, point, normal, self)
+	if ricochet_bounces > 0 and target is EnemyBase and is_inside_tree():
+		_ricochet(target, point)
 	if splash_radius > 0.0 and is_inside_tree():
 		Damageable.damage_area(get_tree(), point, splash_radius, splash_damage, self, target)
 		splashed.emit(point, splash_radius)
 	shot_impact.emit(point, normal, surface, target, killed)
 	return target
+
+
+## Bounce from [param first] to the nearest live enemies, one after another.
+func _ricochet(first: Node, point: Vector3) -> void:
+	var hit_already: Array[Node] = [first]
+	var from := point
+	var dmg := damage * ricochet_damage_ratio
+	for b in ricochet_bounces:
+		var best: EnemyBase = null
+		var best_d := ricochet_range
+		for n in get_tree().get_nodes_in_group(Damageable.GROUP):
+			var e := n as EnemyBase
+			if e == null or not e.active or e.is_destroyed or e in hit_already:
+				continue
+			var d := e.get_effect_origin().distance_to(from)
+			if d < best_d:
+				best_d = d
+				best = e
+		if best == null:
+			return
+		var to := best.get_effect_origin()
+		hit_already.append(best)
+		var killed := best.apply_damage(dmg, to, (from - to).normalized(), self)
+		ricocheted.emit(from, to, best, killed)
+		from = to
 
 
 ## 1 = ready to fire, 0 = just fired (for a reload indicator).

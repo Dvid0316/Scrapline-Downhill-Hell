@@ -3,6 +3,18 @@
 All notable changes to this project. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.5.2] - 2026-11-06: Readable crosshair
+
+Playtest feedback: the crosshair blended into the bright terrain.
+
+### Changed
+- The crosshair is bigger and bolder, and **every stroke has a solid black outline**, so it shows on sand, grass, shadow, and smoke. The barrel ring and the cannon reload ring follow the crosshair colour instead of orange, which vanished on the orange dirt.
+- Hot pink is the default, because nothing in the world is that colour.
+
+### Added
+- `C` cycles the crosshair colour (pink, green, cyan, yellow, white). The choice is saved to `user://settings.cfg`.
+- `tools/crosshair_preview.gd` draws every colour preset over different backgrounds for a readability check.
+
 ## [0.5.1] - 2026-11-06: Detailed train cars
 
 ### Added

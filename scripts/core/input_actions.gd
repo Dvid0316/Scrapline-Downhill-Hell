@@ -10,6 +10,7 @@ const KEYS := {
 	"toggle_pause": [KEY_SPACE],
 	"restart_run": [KEY_R],
 	"toggle_debug": [KEY_F1],
+	"cycle_crosshair": [KEY_C],
 	"cam_pitch_up": [KEY_BRACKETRIGHT],
 	"cam_pitch_down": [KEY_BRACKETLEFT],
 	"cam_zoom_in": [KEY_PERIOD],

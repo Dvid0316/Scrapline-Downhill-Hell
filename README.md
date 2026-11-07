@@ -43,11 +43,13 @@ which takes about a second.
 | `,` / `.` or mouse wheel | Camera distance |
 | `;` / `'` | Camera look-ahead |
 | `Home` | Reset the camera |
+| `C` | Change the crosshair colour (pink, green, cyan, yellow, white). Remembered next time. |
 | `F1` | Toggle the debug overlay |
 | `Esc` | Release the mouse cursor. Click the window to grab it again. |
 
 While the window has focus, the cursor is hidden and kept inside the window,
-and the HUD draws the crosshair. The **amber ring** is where the barrel is
+and the HUD draws the crosshair (black-outlined so it shows on any background;
+`C` changes its colour). The **light ring** is where the barrel is
 actually pointing, and that's where bullets go. The turret is heavy, so the ring
 swings after your cursor and locks on once it catches up.
 

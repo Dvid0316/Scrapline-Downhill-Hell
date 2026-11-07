@@ -3,6 +3,16 @@
 All notable changes to this project. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.6.1] - 2026-11-06: Close-range aiming fix
+
+### Fixed
+- **Shots flew over raiders right beside the train**, even with the crosshair on them (playtest report). The gun could only tip down 22°. A buggy 4–8 m from the car needs 20–40°, and enemies under the coaster trestles need 50–77°. The limit is now 85°.
+- The front "don't shoot through the locomotive" rule was a fixed cone (no depression within 28° of straight ahead). It's now a real check against the locomotive's hull: the gun only lifts when the line of fire would actually pass through the cab. Targets beside or below the locomotive can be hit.
+
+### Added
+- `tools/aim_probe.gd`: parks a buggy at 30 spots around the railcar, at 3 places on the route, and reports which spots the gun can hit (90/90 now; 47/90 before).
+- M3 test: raiders hugging the car on either side, and below the trestles, are hittable.
+
 ## [0.6.0] - 2026-11-06: Rollercoaster track
 
 ### Added

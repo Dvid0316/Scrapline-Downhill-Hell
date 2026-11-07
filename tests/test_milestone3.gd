@@ -52,6 +52,7 @@ func _run() -> void:
 	await _test_each_kind_spawns_and_keeps_pace()
 	await _test_ground_vehicle_drives()
 	await _test_player_kills_enemy()
+	await _test_close_raiders_hittable()
 	await _test_enemy_fire_damages_hull()
 	await _test_kamikaze_hits_train()
 	await _test_kamikaze_chain()
@@ -152,6 +153,41 @@ func _test_player_kills_enemy() -> void:
 			break
 	_check(not e.active, "shot-down drone falls, then returns to the pool")
 	weapon.spread_degrees = 0.6
+
+
+## Raiders hugging the car (and below the coaster trestles) can be hit when
+## the crosshair is on them: the gun tips down steeply instead of shooting
+## over them.
+func _test_close_raiders_hittable() -> void:
+	var camera: Camera3D = main.get_node("FollowCamera")
+	var space := camera.get_world_3d().direct_space_state
+	var e := director.spawn_enemy(&"buggy") as RaiderVehicle
+	e.armed = false
+	e.set_physics_process(false)
+	for spot in [[316.0, -5.0], [316.0, 5.0], [316.0, -8.0], [1400.0, -6.0], [1400.0, 8.0]]:
+		train.set_head_distance(spot[0])
+		_stop_train()
+		await _frames(2)
+		(camera as FollowCamera).snap()
+		await _frames(2)
+		e.rel_offset = e.core_rel_offset()
+		e.lateral = spot[1]
+		e._place(0.0)
+		await physics_frame
+		turret.aim_at(input.screen_to_aim_point(camera.unproject_position(e.get_effect_origin())))
+		turret.snap_to_aim()
+		await process_frame
+		var mz := turret.get_muzzle_transform().origin
+		var h := space.intersect_ray(PhysicsRayQueryParameters3D.create(
+			mz, mz + turret.get_barrel_direction() * 320.0, PhysicsLayers.PLAYER_SHOT_MASK))
+		var ok := not h.is_empty() and Damageable.find_in(h.collider as Node) == e
+		_check(ok, "raider %.0f m to the %s at %.0f m along the route is hittable" % [
+			absf(spot[1]), "left" if spot[1] < 0.0 else "right", spot[0]])
+	e.armed = true  # pooled: leave it as we found it
+	e.set_physics_process(true)
+	e.despawn()
+	train.set_head_distance(316.0)
+	await _frames(2)
 
 
 ## Enemy rounds hit the hull (and report to the presentation layer).

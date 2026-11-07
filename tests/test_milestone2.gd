@@ -143,7 +143,10 @@ func _test_camera_aim() -> void:
 	turret.aim_at(loco.global_position + Vector3.UP * 1.0)
 	turret.snap_to_aim()
 	var pitch := rad_to_deg((turret.get_node("Yaw/Pitch") as Node3D).rotation.x)
-	_check(pitch >= turret.front_arc_min_pitch - 0.01, "turret won't depress into the locomotive (pitch %.1f°)" % pitch)
+	var mz := turret.get_muzzle_transform().origin
+	var through := camera.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(
+		mz, mz + turret.get_barrel_direction() * 40.0, PhysicsLayers.TRAIN))
+	_check(through.is_empty(), "turret won't depress into the locomotive (pitch %.1f°)" % pitch)
 
 
 ## 3–5. Fire rate, holding fires repeatedly, releasing stops.

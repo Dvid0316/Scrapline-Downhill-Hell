@@ -10,9 +10,11 @@ extends Node3D
 ## [member aim_point] and it slews toward it at the configured speeds. Because
 ## it's parented to the railcar, it stays attached as the train moves.
 ##
-## "Don't aim through the train": over the front arc (where the locomotive
-## sits), depression is limited to [member front_arc_min_pitch]. Player
-## shots also ignore the TRAIN physics layer completely.
+## "Don't aim through the train": if a shot at the aim point would pass
+## through another car's hull (the locomotive), the gun lifts just enough to
+## clear it. Anywhere else it can tip right down, so raiders hugging the car
+## or driving under the coaster trestles can be hit. Player shots also ignore
+## the TRAIN physics layer completely.
 
 @export_group("Traverse")
 ## Top traverse speeds. The turret accelerates up to these and eases in as it
@@ -25,11 +27,10 @@ extends Node3D
 ## Easing near the target: wanted speed = remaining angle × this (1/s).
 ## Higher = snappier stop, lower = softer settle.
 @export_range(1.0, 40.0) var settle_rate: float = 9.0
-@export_range(-45.0, 0.0) var min_pitch: float = -22.0
+## How far the gun can tip down. Steep, so it can hit raiders right beside
+## the car and down below the coaster trestles.
+@export_range(-89.0, 0.0) var min_pitch: float = -85.0
 @export_range(0.0, 85.0) var max_pitch: float = 60.0
-## Half-angle of the forward cone where the locomotive blocks low shots.
-@export_range(0.0, 90.0) var front_arc_degrees: float = 28.0
-@export_range(-20.0, 10.0) var front_arc_min_pitch: float = -2.0
 
 @export_group("Feel")
 @export var recoil_distance: float = 0.12
@@ -64,6 +65,9 @@ var _last_goal: Vector2
 var _has_last_goal := false
 var _flash_left: float = 0.0
 var _rng := RandomNumberGenerator.new()
+## Hull boxes of the other cars (the gun mustn't fire through them).
+var _blockers: Array[CollisionShape3D] = []
+var _blockers_found := false
 
 
 func _ready() -> void:
@@ -131,11 +135,52 @@ func _desired_angles(world_point: Vector3) -> Vector2:
 	var pivot := _pitch.position
 	var horizontal := Vector2(local.x, local.z).length() - absf(pivot.z)
 	var pitch := atan2(local.y - pivot.y, maxf(horizontal, 0.1))
-	var lo := deg_to_rad(min_pitch)
-	if absf(yaw) < deg_to_rad(front_arc_degrees):
-		lo = maxf(lo, deg_to_rad(front_arc_min_pitch))
-	pitch = clampf(pitch, lo, deg_to_rad(max_pitch))
+	var hi := deg_to_rad(max_pitch)
+	pitch = clampf(pitch, deg_to_rad(min_pitch), hi)
+	# Lift over the locomotive (or any other car) if it's in the way.
+	# Checked along the whole line of fire, not just to the aim point, so a
+	# miss can't carry on through the cab either.
+	while pitch < hi and _shot_blocked(yaw, pitch, 400.0):
+		pitch = minf(pitch + deg_to_rad(1.0), hi)
 	return Vector2(yaw, pitch)
+
+
+## Would a shot from the elevation pivot at (yaw, pitch), out to [param reach]
+## metres, pass through another car's hull?
+func _shot_blocked(yaw: float, pitch: float, reach: float) -> bool:
+	if not _blockers_found:
+		_find_blockers()
+	if _blockers.is_empty():
+		return false
+	var yb := Basis(Vector3.UP, yaw)
+	var from := global_transform * (yb * _pitch.position)
+	var dir := global_transform.basis * (yb * Basis(Vector3.RIGHT, pitch) * Vector3.FORWARD)
+	var to := from + dir.normalized() * reach
+	for c in _blockers:
+		if not is_instance_valid(c):
+			continue
+		var box := c.shape as BoxShape3D
+		var inv := c.global_transform.affine_inverse()
+		if AABB(-box.size * 0.5, box.size).intersects_segment(inv * from, inv * to):
+			return true
+	return false
+
+
+func _find_blockers() -> void:
+	_blockers_found = true
+	var own: Node = self
+	var n := get_parent()
+	while n and not (n is TrainController):
+		own = n
+		n = n.get_parent()
+	if n == null:
+		return
+	for car in (n as TrainController).cars:
+		if car == own:
+			continue
+		for c in car.find_children("*", "CollisionShape3D", true, false):
+			if (c as CollisionShape3D).shape is BoxShape3D:
+				_blockers.append(c)
 
 
 ## One axis of traverse. Wanted speed = how fast the goal is moving

@@ -3,15 +3,16 @@ extends Path3D
 ## The single source of truth for where the railway goes.
 ##
 ## The route is authored as a short list of control points. Smooth Bezier
-## handles are generated automatically (Catmull-Rom style), so tweaking the
-## route is just editing positions in the inspector. Everything else — rails,
-## terrain, prop placement, the train, the camera — reads from this curve.
+## handles are generated automatically (Catmull-Rom style), so tweaking positions
+## is just editing positions in the inspector. Everything else — rails, terrain,
+## prop placement, the train, the camera — reads from this curve.
 ##
 ## Convention: the train travels in the direction of increasing curve offset.
 ## Overall travel direction is roughly world -Z (Godot's "forward").
 
-## Control points in this local space (metres). Y is elevation.
-## The coaster now returns to its starting point on a huge, rising loop.
+## Control points in this space (metres). Y is elevation.
+## The coaster now has extra camelbacks and dips before the final plunge, then
+## returns to its starting point on a huge, rising loop.
 @export var control_points: PackedVector3Array = PackedVector3Array([
 	Vector3(0, 70, 60),
 	Vector3(0, 70, 0),
@@ -44,33 +45,37 @@ extends Path3D
 	Vector3(52, -16, -1590),
 	Vector3(44, -30, -1640),
 	Vector3(36, -32, -1690),    # valley
-	Vector3(30, -26, -1735),    # camelback humps
+	Vector3(30, -26, -1735),    # camelback hills
 	Vector3(26, -27, -1770),
 	Vector3(24, -40, -1815),
 	Vector3(26, -46, -1855),
 	Vector3(30, -42, -1895),
 	Vector3(34, -50, -1935),
-	Vector3(38, -75, -2000),    # THE PLUNGE
-	Vector3(40, -105, -2075),
-	Vector3(40, -122, -2145),
-	Vector3(38, -128, -2215),   # run-out
-	Vector3(36, -129, -2285),
-	Vector3(34, -129, -2345),
+	Vector3(40, -30, -1970),    # punchy rise
+	Vector3(46, -48, -2005),    # quick dip
+	Vector3(50, -24, -2040),    # second camelback
+	Vector3(46, -49, -2075),    # another speed-building drop
+	Vector3(38, -75, -2110),    # THE PLUNGE
+	Vector3(40, -105, -2185),
+	Vector3(40, -122, -2255),
+	Vector3(38, -128, -2325),   # run-out
+	Vector3(36, -129, -2395),
+	Vector3(34, -129, -2455),
 	# --- Huge return loop: swings wide around the descent and climbs home ---
-	Vector3(20, -129, -2460),
-	Vector3(-50, -128, -2570),
-	Vector3(-180, -122, -2650),
-	Vector3(-380, -105, -2680),
-	Vector3(-600, -80, -2600),
-	Vector3(-800, -45, -2400),
-	Vector3(-930, 0, -2100),
-	Vector3(-980, 35, -1700),
-	Vector3(-950, 65, -1250),
-	Vector3(-850, 85, -800),
-	Vector3(-650, 95, -400),
-	Vector3(-400, 95, -50),
-	Vector3(-180, 90, 180),
-	Vector3(-40, 80, 300),
+	Vector3(20, -129, -2570),
+	Vector3(-50, -128, -2680),
+	Vector3(-180, -122, -2760),
+	Vector3(-380, -105, -2790),
+	Vector3(-600, -80, -2710),
+	Vector3(-800, -45, -2510),
+	Vector3(-930, 0, -2210),
+	Vector3(-980, 35, -1810),
+	Vector3(-950, 65, -1360),
+	Vector3(-850, 85, -910),
+	Vector3(-650, 95, -510),
+	Vector3(-400, 95, -160),
+	Vector3(-180, 90, 70),
+	Vector3(-40, 80, 190),
 	Vector3(0, 70, 250),
 	Vector3(0, 70, 60),     # close smoothly at the starting point
 ])

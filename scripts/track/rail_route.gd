@@ -10,11 +10,8 @@ extends Path3D
 ## Convention: the train travels in the direction of increasing curve offset.
 ## Overall travel direction is roughly world -Z (Godot's "forward").
 
-## Control points in this node's local space (metres). Y is elevation.
-## The first ~1 km is the original gentle descent (shooting gallery); after
-## [member coaster_start_index] it becomes a rollercoaster: a lift hill, a big
-## drop, camelback humps and a final plunge. The train has gravity, so the
-## drops build real speed.
+## Control points in this local space (metres). Y is elevation.
+## The coaster now returns to its starting point on a huge, rising loop.
 @export var control_points: PackedVector3Array = PackedVector3Array([
 	Vector3(0, 70, 60),
 	Vector3(0, 70, 0),
@@ -59,10 +56,29 @@ extends Path3D
 	Vector3(38, -128, -2215),   # run-out
 	Vector3(36, -129, -2285),
 	Vector3(34, -129, -2345),
+	# --- Huge return loop: swings wide around the descent and climbs home ---
+	Vector3(20, -129, -2460),
+	Vector3(-50, -128, -2570),
+	Vector3(-180, -122, -2650),
+	Vector3(-380, -105, -2680),
+	Vector3(-600, -80, -2600),
+	Vector3(-800, -45, -2400),
+	Vector3(-930, 0, -2100),
+	Vector3(-980, 35, -1700),
+	Vector3(-950, 65, -1250),
+	Vector3(-850, 85, -800),
+	Vector3(-650, 95, -400),
+	Vector3(-400, 95, -50),
+	Vector3(-180, 90, 180),
+	Vector3(-40, 80, 300),
+	Vector3(0, 70, 250),
+	Vector3(0, 70, 60),     # close smoothly at the starting point
 ])
 
 ## Index of the first rollercoaster control point (the gentle part ends here).
 @export var coaster_start_index: int = 16
+## This hand-authored route returns to its start, forming one continuous loop.
+@export var closed_loop: bool = true
 
 ## Bezier handle length as a fraction of the neighbour span. ~0.16 = Catmull-Rom.
 @export_range(0.05, 0.4) var handle_scale: float = 0.17
@@ -103,14 +119,16 @@ func get_coaster_start() -> float:
 
 ## World-space position on the track centreline at [param offset] metres.
 func sample_world(offset: float) -> Vector3:
-	var d := clampf(offset, 0.0, get_length())
+	var length := get_length()
+	var d := fposmod(offset, length) if closed_loop and length > 0.0 else clampf(offset, 0.0, length)
 	return to_global(curve.sample_baked(d, true))
 
 
 ## Like [method sample_world], but continues in a straight line past either
-## end of the route instead of clamping. Enemies use it so they can sit a
-## little behind the start or ahead of the end without bunching up.
+## end of an open route. Closed routes wrap naturally instead.
 func sample_world_extended(offset: float) -> Vector3:
+	if closed_loop:
+		return sample_world(offset)
 	var l := get_length()
 	if offset < 0.0:
 		return sample_world(0.0) + tangent_world(1.0) * offset

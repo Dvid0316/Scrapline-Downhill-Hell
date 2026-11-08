@@ -43,6 +43,13 @@ extends Node3D
 ## Up to this height the track runs on an earth embankment; higher = trestle.
 @export var embankment_max: float = 5.0
 
+@export_group("Pre-plunge tunnel")
+## The final route tunnel is tied to these control points, so it follows route edits.
+@export_range(0, 60, 1) var tunnel_start_point: int = 32
+@export_range(0, 60, 1) var tunnel_end_point: int = 35
+@export var tunnel_half_width: float = 6.5
+@export var tunnel_cut_depth: float = 3.0
+
 ## Build a static collider (WORLD layer) so shots and the aim ray hit the ground.
 @export var generate_collision: bool = true
 
@@ -64,6 +71,8 @@ var _grid_dist: PackedFloat32Array
 # Ground line under the route (world y), sampled every GROUND_STEP metres.
 const GROUND_STEP := 2.0
 var _ground: PackedFloat32Array
+var _tunnel_start_offset: float = 0.0
+var _tunnel_end_offset: float = 0.0
 
 
 func _ready() -> void:
@@ -87,6 +96,18 @@ func _setup() -> void:
 	var b := route.sample_world(route.get_length())
 	_mean_y = (a.y + b.y) * 0.5
 	_build_ground_line()
+	_update_tunnel_offsets()
+
+
+func _update_tunnel_offsets() -> void:
+	_tunnel_start_offset = 0.0
+	_tunnel_end_offset = 0.0
+	if route.control_points.is_empty():
+		return
+	var first := clampi(tunnel_start_point, 0, route.control_points.size() - 1)
+	var last := clampi(tunnel_end_point, first, route.control_points.size() - 1)
+	_tunnel_start_offset = route.curve.get_closest_offset(route.control_points[first])
+	_tunnel_end_offset = route.curve.get_closest_offset(route.control_points[last])
 
 
 ## Ground elevation under the track: equal to the track on the gentle part;
@@ -234,7 +255,7 @@ func _height_from_relation(x: float, z: float, rel: Vector3) -> float:
 		var reach := bed_half_width + 1.0 + absf(lift) * (2.2 if lift > 0.0 else 1.4)
 		base = lerpf(bed, ground, smoothstep(bed_half_width, reach, d))
 	if d <= bed_half_width:
-		return base
+		return _apply_tunnel_cut(base, rel)
 	var s := smoothstep(bed_half_width, bed_half_width + shoulder_width, d)
 	var h := base + s * (0.4 + _detail.get_noise_2d(x, z) * 0.9)
 	var n := _noise.get_noise_2d(x, z)
@@ -247,7 +268,17 @@ func _height_from_relation(x: float, z: float, rel: Vector3) -> float:
 		var w := smoothstep(wall_start, wall_start + valley_width, d)
 		h -= valley_depth * w
 		h += n * noise_amplitude * w
-	return h
+	return _apply_tunnel_cut(h, rel)
+
+
+## Excavate a rounded corridor through the terrain before the final plunge.
+func _apply_tunnel_cut(height: float, rel: Vector3) -> float:
+	if _tunnel_end_offset <= _tunnel_start_offset:
+		return height
+	var along := smoothstep(_tunnel_start_offset - 5.0, _tunnel_start_offset + 5.0, rel.z)
+	along *= 1.0 - smoothstep(_tunnel_end_offset - 5.0, _tunnel_end_offset + 5.0, rel.z)
+	var across := 1.0 - smoothstep(tunnel_half_width, tunnel_half_width + 3.0, absf(rel.x))
+	return lerpf(height, rel.y - tunnel_cut_depth, along * across)
 
 
 func build() -> void:
@@ -336,6 +367,95 @@ func build() -> void:
 		shape.shape = mi.mesh.create_trimesh_shape()
 		body.add_child(shape)
 		mi.add_child(body)
+	_build_tunnel_interior()
+
+
+## Create a dark rock-lined arch, repeated structural ribs, and warm guide lights.
+func _build_tunnel_interior() -> void:
+	if _tunnel_end_offset <= _tunnel_start_offset:
+		return
+	var lining := StandardMaterial3D.new()
+	lining.albedo_color = Color(0.105, 0.095, 0.085)
+	lining.roughness = 0.95
+	lining.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var rib_material := StandardMaterial3D.new()
+	rib_material.albedo_color = Color(0.24, 0.20, 0.16)
+	rib_material.roughness = 0.85
+	rib_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+
+	var start := maxf(_tunnel_start_offset - 2.0, 0.0)
+	var end := minf(_tunnel_end_offset + 2.0, route.get_length())
+	var shell := MeshInstance3D.new()
+	shell.name = "TunnelInterior"
+	shell.mesh = _make_tunnel_arch_mesh(start, end, 2.0)
+	shell.material_override = lining
+	add_child(shell)
+
+	var rib_offset := start
+	while rib_offset <= end:
+		var rib := MeshInstance3D.new()
+		rib.name = "TunnelRib"
+		rib.mesh = _make_tunnel_arch_mesh(maxf(rib_offset - 0.22, start), minf(rib_offset + 0.22, end), 0.44)
+		rib.material_override = rib_material
+		add_child(rib)
+		rib_offset += 8.0
+
+	# Portal ribs frame both openings, even when the regular rib spacing misses them.
+	for portal_offset in [start, end]:
+		var portal := MeshInstance3D.new()
+		portal.name = "TunnelPortalFrame"
+		portal.mesh = _make_tunnel_arch_mesh(maxf(portal_offset - 0.32, start), minf(portal_offset + 0.32, end), 0.64)
+		portal.material_override = rib_material
+		add_child(portal)
+
+	var light_offset := start + 10.0
+	while light_offset < end:
+		var lamp := OmniLight3D.new()
+		lamp.name = "TunnelLamp"
+		lamp.light_color = Color(1.0, 0.58, 0.28)
+		lamp.light_energy = 2.0
+		lamp.omni_range = 18.0
+		lamp.position = to_local(route.sample_world(light_offset) + Vector3.UP * 6.2)
+		add_child(lamp)
+		light_offset += 24.0
+
+
+func _make_tunnel_arch_mesh(start: float, end: float, step: float) -> ArrayMesh:
+	var profile := PackedVector2Array()
+	var radius := tunnel_half_width - 0.2
+	profile.append(Vector2(-radius, -tunnel_cut_depth + 0.2))
+	for i in 13:
+		var angle := PI - float(i) / 12.0 * PI
+		profile.append(Vector2(cos(angle) * radius, 3.0 + sin(angle) * radius))
+	profile.append(Vector2(radius, -tunnel_cut_depth + 0.2))
+
+	var length := maxf(end - start, 0.05)
+	var slice_count := maxi(int(ceil(length / maxf(step, 0.1))) + 1, 2)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in slice_count:
+		var offset := lerpf(start, end, float(i) / float(slice_count - 1))
+		var centre := route.sample_world(offset)
+		var tangent := route.tangent_world(offset)
+		var flat_tangent := Vector3(tangent.x, 0.0, tangent.z).normalized()
+		var right := Vector3(-flat_tangent.z, 0.0, flat_tangent.x)
+		for point in profile:
+			var world_point := centre + right * point.x + Vector3.UP * point.y
+			st.add_vertex(to_local(world_point))
+	for i in slice_count - 1:
+		for j in profile.size() - 1:
+			var a := i * profile.size() + j
+			var b := a + 1
+			var c := a + profile.size()
+			var d := c + 1
+			st.add_index(a)
+			st.add_index(c)
+			st.add_index(d)
+			st.add_index(a)
+			st.add_index(d)
+			st.add_index(b)
+		st.generate_normals()
+	return st.commit()
 
 
 ## Vertex colour = blend masks for the terrain shader:
